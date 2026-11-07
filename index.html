@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Incident Chronology & Report Studio</title>
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-tertiary: #334155;
+      --accent-blue: #38bdf8;
+      --accent-emerald: #34d399;
+      --accent-amber: #fbbf24;
+      --accent-rose: #f43f5e;
+      --accent-purple: #c084fc;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #475569;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      padding: 1rem;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 1.5rem;
+    }
+
+    h1 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .badge-privacy {
+      background-color: rgba(52, 211, 153, 0.1);
+      color: var(--accent-emerald);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+      font-size: 0.75rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 9999px;
+      font-weight: 500;
+    }
+
+    .header-controls {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .btn-header {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 0.4rem 0.8rem;
+      border-radius: 0.375rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+
+    .btn-header:hover {
+      background-color: var(--bg-secondary);
+      color: var(--text-main);
+      border-color: var(--accent-blue);
+    }
+
+    .app-container {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (min-width: 1024px) {
+      .app-container { grid-template-columns: 460px 1fr; }
+    }
+
+    .panel {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .panel-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--accent-blue);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
+
+    input[type="text"], input[type="datetime-local"], select, textarea {
+      background-color: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.375rem;
+      font-size: 0.9rem;
+      font-family: inherit;
+      width: 100%;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 1px var(--accent-blue);
+    }
+
+    textarea { resize: vertical; min-height: 70px; }
+
+    .category-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+
+    .cat-btn {
+      padding: 0.5rem;
+      background-color: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      border-radius: 0.375rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .cat-btn.active[data-cat="OBSERVED_EVENT"] { background-color: rgba(56, 189, 248, 0.2); color: var(--accent-blue); border-color: var(--accent-blue); }
+    .cat-btn.active[data-cat="DECISION"] { background-color: rgba(192, 132, 252, 0.2); color: var(--accent-purple); border-color: var(--accent-purple); }
+    .cat-btn.active[data-cat="ACTION"] { background-color: rgba(52, 211, 153, 0.2); color: var(--accent-emerald); border-color: var(--accent-emerald); }
+    .cat-btn.active[data-cat="COMMUNICATION"] { background-color: rgba(251, 191, 36, 0.2); color: var(--accent-amber); border-color: var(--accent-amber); }
+
+    .dynamic-section {
+      display: none;
+      flex-direction: column;
+      gap: 0.85rem;
+      background-color: rgba(0, 0, 0, 0.15);
+      padding: 0.75rem;
+      border-radius: 0.375rem;
+      border: 1px dashed var(--border-color);
+    }
+
+    .dynamic-section.active { display: flex; }
+
+    .btn-submit {
+      background-color: var(--accent-blue);
+      color: #0f172a;
+      font-weight: 700;
+      border: none;
+      padding: 0.65rem;
+      border-radius: 0.375rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+
+    .btn-submit:hover { opacity: 0.9; }
+
+    .action-bar { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+    .btn-secondary {
+      background-color: var(--bg-tertiary);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      padding: 0.35rem 0.75rem;
+      border-radius: 0.375rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .btn-secondary:hover { background-color: var(--border-color); }
+
+    .timeline-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .filter-chip-group {
+      display: flex;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-chip {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 0.25rem;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-primary);
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .filter-chip.active {
+      background-color: var(--bg-tertiary);
+      color: var(--text-main);
+      border-color: var(--accent-blue);
+    }
+
+    .timeline-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      max-height: 550px;
+      overflow-y: auto;
+      padding-right: 0.25rem;
+    }
+
+    .timeline-card {
+      background-color: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-left: 4px solid var(--border-color);
+      border-radius: 0.375rem;
+      padding: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .timeline-card.cat-OBSERVED_EVENT { border-left-color: var(--accent-blue); }
+    .timeline-card.cat-DECISION { border-left-color: var(--accent-purple); }
+    .timeline-card.cat-ACTION { border-left-color: var(--accent-emerald); }
+    .timeline-card.cat-COMMUNICATION { border-left-color: var(--accent-amber); }
+
+    .card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; }
+    .card-tags { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+
+    .tag {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.1rem 0.4rem;
+      border-radius: 0.25rem;
+      text-transform: uppercase;
+    }
+
+    .tag-cat-event { background-color: rgba(56, 189, 248, 0.15); color: var(--accent-blue); }
+    .tag-cat-decision { background-color: rgba(192, 132, 252, 0.15); color: var(--accent-purple); }
+    .tag-cat-action { background-color: rgba(52, 211, 153, 0.15); color: var(--accent-emerald); }
+    .tag-cat-comm { background-color: rgba(251, 191, 36, 0.15); color: var(--accent-amber); }
+    .tag-phase { background-color: var(--bg-tertiary); color: var(--text-muted); }
+
+    .card-time { font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent-amber); font-weight: 600; }
+    .card-body { font-size: 0.9rem; white-space: pre-wrap; }
+
+    .card-meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      background-color: rgba(255, 255, 255, 0.03);
+      padding: 0.4rem;
+      border-radius: 0.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .card-actions { display: flex; justify-content: flex-end; gap: 0.4rem; margin-top: 0.25rem; }
+
+    .btn-xs {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 0.25rem;
+      border: 1px solid var(--border-color);
+      background: var(--bg-secondary);
+      color: var(--text-main);
+      cursor: pointer;
+    }
+
+    .btn-xs:hover { background-color: var(--bg-tertiary); }
+
+    .markdown-output {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      background-color: var(--bg-primary);
+      color: #e2e8f0;
+      border: 1px solid var(--border-color);
+      border-radius: 0.375rem;
+      padding: 0.85rem;
+      height: 350px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal-content {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      max-width: 600px;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; }
+    .guide-section { display: flex; flex-direction: column; gap: 0.5rem; }
+    .guide-section h3 { font-size: 0.95rem; color: var(--accent-blue); }
+    .guide-section p, .guide-section ul { font-size: 0.85rem; color: var(--text-muted); }
+    .guide-section ul { padding-left: 1.25rem; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>
+      <span>🛡️ Incident Chronology Studio</span>
+      <span class="badge-privacy" data-i18n="header.privacy">100% Local / Zero Server Communication</span>
+    </h1>
+    <div class="header-controls">
+      <!-- Language Switcher Toggle -->
+      <button class="btn-header" id="langToggle">🌐 English / 日本語</button>
+      <button class="btn-header" id="openGuide" data-i18n="header.guideBtn">💡 Whiteboard Tips</button>
+    </div>
+  </header>
+
+  <main class="app-container">
+    
+    <!-- Left Column: Form -->
+    <section class="panel">
+      <h2 class="panel-title" data-i18n="form.title">Quick Note Entry</h2>
+
+      <!-- Category Selector -->
+      <div class="form-group">
+        <label data-i18n="form.categoryLabel">1. What kind of note is this?</label>
+        <div class="category-grid">
+          <button class="cat-btn active" data-cat="OBSERVED_EVENT" id="catObservedEvent" data-i18n="cat.observedEvent">💻 Observed Event</button>
+          <button class="cat-btn" data-cat="DECISION" id="catDecision" data-i18n="cat.decision">🧠 Decision</button>
+          <button class="cat-btn" data-cat="ACTION" id="catAction" data-i18n="cat.action">🛠️ Response Action</button>
+          <button class="cat-btn" data-cat="COMMUNICATION" id="catComm" data-i18n="cat.comm">📢 Communication</button>
+        </div>
+      </div>
+
+      <!-- Time Input -->
+      <div class="form-group">
+        <label data-i18n="form.timeLabel">2. Timestamp / Timeframe</label>
+        <input type="datetime-local" id="eventTime">
+      </div>
+
+      <!-- Lifecycle Phase -->
+      <div class="form-group">
+        <label for="phase" data-i18n="form.phaseLabel">3. Incident Phase</label>
+        <select id="phase">
+          <option value="0. Occurrence / Latency">0. Occurrence / Latency (Pre-detection events)</option>
+          <option value="1. Detection / Alert">1. Detection / Trigger (Initial alert or discovery)</option>
+          <option value="2. Triage / Attribution">2. Triage / Investigation (Analysis & assessment)</option>
+          <option value="3. Containment">3. Containment (Emergency mitigation)</option>
+          <option value="4. Forensics / Acquisition">4. Forensics / Evidence (Evidence & log check)</option>
+          <option value="5. Eradication / Recovery">5. Recovery / Restoration (System restoration)</option>
+          <option value="6. Communication">6. Communication (Reporting & updates)</option>
+        </select>
+      </div>
+
+      <!-- Dynamic Section: OBSERVED_EVENT -->
+      <div class="dynamic-section active" id="secObservedEvent">
+        <div class="form-group">
+          <label for="eventEvidence" data-i18n="form.evidenceLabel">Log Ref / Evidence Note (EventID, Hash, IP, etc.)</label>
+          <input type="text" id="eventEvidence" data-i18n-ph="form.evidencePh" placeholder="e.g. EventID 4688, Hash, IP...">
+        </div>
+      </div>
+
+      <!-- Dynamic Section: DECISION -->
+      <div class="dynamic-section" id="secDecision">
+        <div class="form-group">
+          <label for="decActor" data-i18n="form.decisionMakerLabel">Who decided / Identified this?</label>
+          <input type="text" id="decActor" data-i18n-ph="form.decisionMakerPh" placeholder="e.g. Analyst A">
+        </div>
+        <div class="form-group">
+          <label for="decRationale" data-i18n="form.rationaleLabel">Why? (Rationale / Reason)</label>
+          <input type="text" id="decRationale" data-i18n-ph="form.rationalePh" placeholder="e.g. Matched bad IP in proxy log">
+        </div>
+      </div>
+
+      <!-- Dynamic Section: ACTION -->
+      <div class="dynamic-section" id="secAction">
+        <div class="form-group">
+          <label for="actAssignee" data-i18n="form.assigneeLabel">Who did this? (Operator)</label>
+          <input type="text" id="actAssignee" data-i18n-ph="form.assigneePh" placeholder="e.g. Responder B">
+        </div>
+        <div class="form-group">
+          <label for="actArtifact" data-i18n="form.artifactLabel">Result / Outcome Memo</label>
+          <input type="text" id="actArtifact" data-i18n-ph="form.artifactPh" placeholder="e.g. PC Isolated, Dump saved">
+        </div>
+      </div>
+
+      <!-- Dynamic Section: COMMUNICATION -->
+      <div class="dynamic-section" id="secComm">
+        <div class="form-group">
+          <label for="commRecipient" data-i18n="form.recipientLabel">Who was notified?</label>
+          <input type="text" id="commRecipient" data-i18n-ph="form.recipientPh" placeholder="e.g. CISO, Legal, Helpdesk">
+        </div>
+        <div class="form-group">
+          <label for="commChannel" data-i18n="form.channelLabel">How? (Channel)</label>
+          <input type="text" id="commChannel" data-i18n-ph="form.channelPh" placeholder="e.g. Email, Call, Slack">
+        </div>
+      </div>
+
+      <!-- Common Summary -->
+      <div class="form-group">
+        <label for="summary" data-i18n="form.summaryLabel">Event Note / Summary</label>
+        <textarea id="summary" data-i18n-ph="form.summaryPh" placeholder="What happened? Keep it concise..."></textarea>
+      </div>
+
+      <button class="btn-submit" id="addBtn" data-i18n="form.addBtn">Add to Timeline</button>
+    </section>
+
+    <!-- Right Column: Timeline & Report -->
+    <section style="display: flex; flex-direction: column; gap: 1.5rem;">
+      
+      <!-- Metadata Header Panel -->
+      <div class="panel">
+        <h2 class="panel-title" data-i18n="meta.title">Incident Overview</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+          <div class="form-group">
+            <label for="incTitle" data-i18n="meta.nameLabel">Incident Title</label>
+            <input type="text" id="incTitle" value="202611-Malware-Infection-Handling">
+          </div>
+          <div class="form-group">
+            <label for="incCommander" data-i18n="meta.commanderLabel">Lead Responder / Commander</label>
+            <input type="text" id="incCommander" data-i18n-ph="meta.commanderPh" placeholder="e.g. John Doe">
+          </div>
+        </div>
+      </div>
+
+      <!-- Integrated Timeline Panel -->
+      <div class="panel">
+        <div class="timeline-controls">
+          <h2 class="panel-title" style="border: none; padding: 0;">
+            <span data-i18n="timeline.title">Timeline Cards</span> (<span id="itemCount">0</span>)
+          </h2>
+          <div class="action-bar">
+            <button class="btn-secondary" id="sortBtn" data-i18n="timeline.sortBtn">Sort (Oldest/Newest)</button>
+            <button class="btn-secondary" id="exportJsonBtn" data-i18n="timeline.exportBtn">Save JSON</button>
+            <button class="btn-secondary" id="importJsonBtn" data-i18n="timeline.importBtn">Load JSON</button>
+            <input type="file" id="jsonFileInput" accept=".json" style="display: none;">
+          </div>
+        </div>
+
+        <!-- Filter Chips Bar -->
+        <div style="display: flex; align-items: center; gap: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--border-color);">
+          <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;" data-i18n="timeline.filterLabel">Filter:</span>
+          <div class="filter-chip-group">
+            <button class="filter-chip active" data-filter="ALL" id="filterAll" data-i18n="filter.all">Show All</button>
+            <button class="filter-chip active" data-filter="OBSERVED_EVENT" id="filterObserved" data-i18n="filter.observed">💻 Event</button>
+            <button class="filter-chip active" data-filter="DECISION" id="filterDec" data-i18n="filter.dec">🧠 Decisions</button>
+            <button class="filter-chip active" data-filter="ACTION" id="filterAct" data-i18n="filter.act">🛠️ Actions</button>
+            <button class="filter-chip active" data-filter="COMMUNICATION" id="filterComm" data-i18n="filter.comm">📢 Comms</button>
+          </div>
+        </div>
+
+        <div class="timeline-list" id="timelineList"></div>
+      </div>
+
+      <!-- Markdown Report Panel -->
+      <div class="panel">
+        <div class="timeline-controls">
+          <h2 class="panel-title" style="border: none; padding: 0;" data-i18n="report.title">Auto-Generated Markdown Report</h2>
+          <button class="btn-secondary" id="copyMdBtn" data-i18n="report.copyBtn">📋 Copy Markdown</button>
+        </div>
+        <div class="markdown-output" id="markdownOutput"></div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Whiteboard Tips Modal -->
+  <div class="modal-overlay" id="guideModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 data-i18n="guide.title">💡 Whiteboard Tips for Responders</h2>
+        <button class="btn-xs" id="closeGuide">✕</button>
+      </div>
+      <div class="guide-section">
+        <h3 data-i18n="guide.sec1Title">1. Keep Facts and Guesses Separate</h3>
+        <p data-i18n="guide.sec1Body">Log evidence (Observed Event) is a hard Fact. Working ideas ("Is this C2?") are Decisions or notes. Keep them distinct so team members don't jump to conclusions.</p>
+      </div>
+      <div class="guide-section">
+        <h3 data-i18n="guide.sec2Title">2. Retroactive Attack Events</h3>
+        <p data-i18n="guide.sec2Body">If log analysis reveals an attack started days ago, log it under Phase "0. Occurrence / Latency" so your timeline accurately reflects when the attacker first got in.</p>
+      </div>
+      <div class="guide-section">
+        <h3 data-i18n="guide.sec3Title">3. Privacy First (Zero Leaks)</h3>
+        <p data-i18n="guide.sec3Body">Everything stays inside your browser's local memory. No data or telemetry leaves your computer, making it completely safe for sensitive incident notes.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // i18n Dictionary Definition (Light & Practical Framing)
+    const i18n = {
+      en: {
+        "header.privacy": "100% Local / Zero Server Communication",
+        "header.guideBtn": "💡 Whiteboard Tips",
+        "form.title": "Quick Note Entry",
+        "form.categoryLabel": "1. What kind of note is this?",
+        "form.timeLabel": "2. Timestamp / Timeframe",
+        "form.phaseLabel": "3. Incident Phase",
+        "form.evidenceLabel": "Log Ref / Evidence Note (EventID, Hash, IP, etc.)",
+        "form.evidencePh": "e.g. EventID 4688, Hash, IP...",
+        "form.decisionMakerLabel": "Who decided / Identified this?",
+        "form.decisionMakerPh": "e.g. Analyst A",
+        "form.rationaleLabel": "Why? (Rationale / Reason)",
+        "form.rationalePh": "e.g. Matched bad IP in proxy log",
+        "form.assigneeLabel": "Who did this? (Operator)",
+        "form.assigneePh": "e.g. Responder B",
+        "form.artifactLabel": "Result / Outcome Memo",
+        "form.artifactPh": "e.g. PC Isolated, Dump saved",
+        "form.recipientLabel": "Who was notified?",
+        "form.recipientPh": "e.g. CISO, Legal, Helpdesk",
+        "form.channelLabel": "How? (Channel)",
+        "form.channelPh": "e.g. Email, Call, Slack",
+        "form.summaryLabel": "Event Note / Summary",
+        "form.summaryPh": "What happened? Keep it concise...",
+        "form.addBtn": "Add to Timeline",
+        "cat.observedEvent": "💻 Observed Event",
+        "cat.decision": "🧠 Decision",
+        "cat.action": "🛠️ Response Action",
+        "cat.comm": "📢 Communication",
+        "meta.title": "Incident Overview",
+        "meta.nameLabel": "Incident Title",
+        "meta.commanderLabel": "Lead Responder / Commander",
+        "meta.commanderPh": "e.g. John Doe",
+        "timeline.title": "Timeline Cards",
+        "timeline.sortBtn": "Sort (Oldest/Newest)",
+        "timeline.exportBtn": "Save JSON",
+        "timeline.importBtn": "Load JSON",
+        "timeline.filterLabel": "Filter:",
+        "filter.all": "Show All",
+        "filter.observed": "💻 Event",
+        "filter.dec": "🧠 Decisions",
+        "filter.act": "🛠️ Actions",
+        "filter.comm": "📢 Comms",
+        "report.title": "Auto-Generated Markdown Report",
+        "report.copyBtn": "📋 Copy Markdown",
+        "guide.title": "💡 Whiteboard Tips for Responders",
+        "guide.sec1Title": "1. Keep Facts and Guesses Separate",
+        "guide.sec1Body": "Log evidence (Observed Event) is a hard Fact. Working ideas (\"Is this C2?\") are Decisions or notes. Keep them distinct so team members don't jump to conclusions.",
+        "guide.sec2Title": "2. Retroactive Attack Events",
+        "guide.sec2Body": "If log analysis reveals an attack started days ago, log it under Phase \"0. Occurrence / Latency\" so your timeline accurately reflects when the attacker first got in.",
+        "guide.sec3Title": "3. Privacy First (Zero Leaks)",
+        "guide.sec3Body": "Everything stays inside your browser's local memory. No data or telemetry leaves your computer, making it completely safe for sensitive incident notes."
+      },
+      ja: {
+        "header.privacy": "100% ローカル動作 / 外部通信なし",
+        "header.guideBtn": "💡 メモのコツ (Tips)",
+        "form.title": "出来事メモの登録",
+        "form.categoryLabel": "1. メモの種類を選択",
+        "form.timeLabel": "2. 日時・タイムスタンプ",
+        "form.phaseLabel": "3. 対応フェーズ",
+        "form.evidenceLabel": "ログ参照 / エビデンスメモ (EventID, ハッシュ, IP等)",
+        "form.evidencePh": "例: EventID 4688, MD5, C2 IP...",
+        "form.decisionMakerLabel": "誰が判断・特定したか？",
+        "form.decisionMakerPh": "例: アナリストA",
+        "form.rationaleLabel": "判断の理由・根拠",
+        "form.rationalePh": "例: プロキシログの悪性IP一致を確認",
+        "form.assigneeLabel": "誰が対応したか？",
+        "form.assigneePh": "例: レスポンダーB",
+        "form.artifactLabel": "結果メモ・成果物",
+        "form.artifactPh": "例: 端末隔離完了, メモリイメージ保存",
+        "form.recipientLabel": "誰に連絡・報告したか？",
+        "form.recipientPh": "例: 経営陣, 法務, JPCERT",
+        "form.channelLabel": "連絡手段",
+        "form.channelPh": "例: メール, 暗号化通話, Slack",
+        "form.summaryLabel": "出来事・メモの概要",
+        "form.summaryPh": "何が起きたか簡潔に入力...",
+        "form.addBtn": "タイムラインに追加",
+        "cat.observedEvent": "💻 観測事象 (Event)",
+        "cat.decision": "🧠 意思決定",
+        "cat.action": "🛠️ 対応アクション",
+        "cat.comm": "📢 コミュニケーション",
+        "meta.title": "インシデント基本情報",
+        "meta.nameLabel": "インシデント名",
+        "meta.commanderLabel": "対応責任者 (Commander)",
+        "meta.commanderPh": "例: セキュリティ太郎",
+        "timeline.title": "タイムラインカード",
+        "timeline.sortBtn": "昇順/降順 切り替え",
+        "timeline.exportBtn": "JSON保存",
+        "timeline.importBtn": "JSON読込",
+        "timeline.filterLabel": "フィルタ:",
+        "filter.all": "すべて表示",
+        "filter.observed": "💻 観測事象",
+        "filter.dec": "🧠 意思決定",
+        "filter.act": "🛠️ 対応",
+        "filter.comm": "📢 連絡",
+        "report.title": "自動生成インシデントレポート (Markdown)",
+        "report.copyBtn": "📋 コピー",
+        "guide.title": "💡 ホワイトボード感覚で使える記録のコツ",
+        "guide.sec1Title": "1. 事実（事実）と見立て（推測）を分ける",
+        "guide.sec1Body": "ログで確認できた事実（観測事象）と、分析中の見立て（意思決定）を区別して残すと、後からチーム内で混乱しません。",
+        "guide.sec2Title": "2. 発覚より前の出来事は「発生・潜伏」に",
+        "guide.sec2Body": "ログ調査で「実は数日前に侵入されていた」と判明した過去の痕跡は、フェーズ「0. 発生・潜伏」を選ぶと時間軸が綺麗に繋がります。",
+        "guide.sec3Title": "3. 完全ローカルで安全",
+        "guide.sec3Body": "入力したデータはすべてブラウザのメモリ内だけに保存されます。外部サーバーへの送信は一切発生しないため、機密メモも安心です。"
+      }
+    };
+
+    // Global State
+    let currentLang = 'en'; // Default English
+    let state = {
+      category: 'OBSERVED_EVENT',
+      sortAsc: true,
+      activeFilters: ['OBSERVED_EVENT', 'DECISION', 'ACTION', 'COMMUNICATION'],
+      items: []
+    };
+
+    // i18n DOM Updater
+    function updateLang(lang) {
+      currentLang = lang;
+      document.documentElement.lang = lang;
+
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (i18n[lang][key]) el.textContent = i18n[lang][key];
+      });
+
+      document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+        const key = el.getAttribute('data-i18n-ph');
+        if (i18n[lang][key]) el.placeholder = i18n[lang][key];
+      });
+
+      render();
+    }
+
+    // Toggle Language Button Event
+    document.getElementById('langToggle').addEventListener('click', () => {
+      const nextLang = currentLang === 'en' ? 'ja' : 'en';
+      updateLang(nextLang);
+    });
+
+    // Category Selector Events
+    const catBtns = document.querySelectorAll('.cat-btn');
+    const sections = {
+      OBSERVED_EVENT: document.getElementById('secObservedEvent'),
+      DECISION: document.getElementById('secDecision'),
+      ACTION: document.getElementById('secAction'),
+      COMMUNICATION: document.getElementById('secComm')
+    };
+
+    catBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        catBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.category = btn.getAttribute('data-cat');
+        
+        Object.keys(sections).forEach(k => sections[k].classList.remove('active'));
+        sections[state.category].classList.add('active');
+      });
+    });
+
+    // Default Datetime to Now
+    function setDefaultTimes() {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      document.getElementById('eventTime').value = now.toISOString().slice(0, 16);
+    }
+
+    // Helper: Format Datetime
+    function formatDT(dtStr) {
+      if (!dtStr) return '-';
+      return dtStr.replace('T', ' ');
+    }
+
+    // Helper: Escape HTML
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    // Add Entry Event
+    document.getElementById('addBtn').addEventListener('click', () => {
+      const summary = document.getElementById('summary').value.trim();
+      if (!summary) {
+        alert(currentLang === 'ja' ? '内容を入力してください。' : 'Please enter event summary.');
+        return;
+      }
+
+      const item = {
+        id: Date.now().toString(),
+        category: state.category,
+        eventTime: document.getElementById('eventTime').value,
+        phase: document.getElementById('phase').value,
+        summary: summary
+      };
+
+      if (state.category === 'OBSERVED_EVENT') {
+        item.evidence = document.getElementById('eventEvidence').value.trim();
+      } else if (state.category === 'DECISION') {
+        item.actor = document.getElementById('decActor').value.trim() || 'N/A';
+        item.rationale = document.getElementById('decRationale').value.trim();
+      } else if (state.category === 'ACTION') {
+        item.assignee = document.getElementById('actAssignee').value.trim() || 'N/A';
+        item.artifact = document.getElementById('actArtifact').value.trim();
+      } else if (state.category === 'COMMUNICATION') {
+        item.recipient = document.getElementById('commRecipient').value.trim() || 'N/A';
+        item.channel = document.getElementById('commChannel').value.trim() || 'N/A';
+      }
+
+      state.items.push(item);
+      document.getElementById('summary').value = '';
+      render();
+    });
+
+    function deleteItem(id) {
+      if (confirm(currentLang === 'ja' ? 'このエントリーを削除しますか？' : 'Delete this entry?')) {
+        state.items = state.items.filter(i => i.id !== id);
+        render();
+      }
+    }
+
+    // Multi-select Filter Events
+    const filterChips = document.querySelectorAll('.filter-chip');
+    filterChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        const filterVal = chip.getAttribute('data-filter');
+        if (filterVal === 'ALL') {
+          state.activeFilters = ['OBSERVED_EVENT', 'DECISION', 'ACTION', 'COMMUNICATION'];
+          filterChips.forEach(c => c.classList.add('active'));
+        } else {
+          document.getElementById('filterAll').classList.remove('active');
+          if (chip.classList.contains('active')) {
+            chip.classList.remove('active');
+            state.activeFilters = state.activeFilters.filter(f => f !== filterVal);
+          } else {
+            chip.classList.add('active');
+            state.activeFilters.push(filterVal);
+          }
+        }
+        render();
+      });
+    });
+
+    // Sort Toggle
+    document.getElementById('sortBtn').addEventListener('click', () => {
+      state.sortAsc = !state.sortAsc;
+      render();
+    });
+
+    // Render Timeline and Report
+    function render() {
+      state.items.sort((a, b) => {
+        const tA = a.eventTime || '';
+        const tB = b.eventTime || '';
+        return state.sortAsc ? tA.localeCompare(tB) : tB.localeCompare(tA);
+      });
+
+      const filteredItems = state.items.filter(i => state.activeFilters.includes(i.category));
+      document.getElementById('itemCount').textContent = filteredItems.length;
+
+      const list = document.getElementById('timelineList');
+      list.innerHTML = '';
+
+      filteredItems.forEach(item => {
+        const card = document.createElement('div');
+        card.className = `timeline-card cat-${item.category}`;
+
+        let catTag = '';
+        let metaHtml = '';
+
+        if (item.category === 'OBSERVED_EVENT') {
+          catTag = `<span class="tag tag-cat-event">💻 OBSERVED EVENT</span>`;
+          if (item.evidence) metaHtml += `<div><strong>Evidence:</strong> ${escapeHtml(item.evidence)}</div>`;
+        } else if (item.category === 'DECISION') {
+          catTag = `<span class="tag tag-cat-decision">🧠 DECISION</span>`;
+          metaHtml += `<div><strong>Decision Maker:</strong> ${escapeHtml(item.actor)}</div>`;
+          if (item.rationale) metaHtml += `<div><strong>Rationale:</strong> ${escapeHtml(item.rationale)}</div>`;
+        } else if (item.category === 'ACTION') {
+          catTag = `<span class="tag tag-cat-action">🛠️ ACTION</span>`;
+          metaHtml += `<div><strong>Assignee:</strong> ${escapeHtml(item.assignee)}</div>`;
+          if (item.artifact) metaHtml += `<div><strong>Artifact:</strong> ${escapeHtml(item.artifact)}</div>`;
+        } else if (item.category === 'COMMUNICATION') {
+          catTag = `<span class="tag tag-cat-comm">📢 COMM</span>`;
+          metaHtml += `<div><strong>Recipient:</strong> ${escapeHtml(item.recipient)} (${escapeHtml(item.channel)})</div>`;
+        }
+
+        card.innerHTML = `
+          <div class="card-header">
+            <div class="card-tags">
+              ${catTag}
+              <span class="tag tag-phase">${item.phase}</span>
+            </div>
+            <div class="card-time">⏱️ ${formatDT(item.eventTime)}</div>
+          </div>
+          <div class="card-body">${escapeHtml(item.summary)}</div>
+          ${metaHtml ? `<div class="card-meta">${metaHtml}</div>` : ''}
+          <div class="card-actions">
+            <button class="btn-xs" onclick="deleteItem('${item.id}')">${currentLang === 'ja' ? '削除' : 'Delete'}</button>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+
+      generateMarkdown();
+    }
+
+    // Markdown Generation
+    function generateMarkdown() {
+      const title = document.getElementById('incTitle').value || 'Incident Response Report';
+      const commander = document.getElementById('incCommander').value || 'N/A';
+
+      let md = `# ${title}\n\n`;
+      md += `**Generated Date:** ${new Date().toISOString().slice(0, 10)}\n`;
+      md += `**Incident Commander:** ${commander}\n\n`;
+      md += `---\n\n`;
+
+      const comms = state.items.filter(i => i.category === 'COMMUNICATION');
+      md += `## 1. Stakeholder Communications History\n\n`;
+      if (comms.length === 0) md += `*No records*\n\n`;
+      else {
+        md += `| Timestamp | Recipient | Channel | Summary |\n| :--- | :--- | :--- | :--- |\n`;
+        comms.forEach(c => md += `| ${formatDT(c.eventTime)} | ${c.recipient} | ${c.channel} | ${c.summary.replace(/\n/g, ' ')} |\n`);
+        md += `\n`;
+      }
+
+      const observedEvents = state.items.filter(i => i.category === 'OBSERVED_EVENT');
+      md += `## 2. Confirmed Observed Events & IoCs\n\n`;
+      if (observedEvents.length === 0) md += `*No records*\n\n`;
+      else {
+        md += `| Timestamp | Phase | Summary | Evidence / Log Ref |\n| :--- | :--- | :--- | :--- |\n`;
+        observedEvents.forEach(s => md += `| ${formatDT(s.eventTime)} | ${s.phase} | ${s.summary.replace(/\n/g, ' ')} | ${s.evidence || '-'} |\n`);
+        md += `\n`;
+      }
+
+      const decisions = state.items.filter(i => i.category === 'DECISION');
+      md += `## 3. Decisions & Investigation Attribution Log\n\n`;
+      if (decisions.length === 0) md += `*No records*\n\n`;
+      else {
+        md += `| Decision Time | Decision Maker | Decision / Working Hypothesis | Rationale / Evidence |\n| :--- | :--- | :--- | :--- |\n`;
+        decisions.forEach(d => md += `| ${formatDT(d.eventTime)} | ${d.actor} | ${d.summary.replace(/\n/g, ' ')} | ${d.rationale || '-'} |\n`);
+        md += `\n`;
+      }
+
+      const actions = state.items.filter(i => i.category === 'ACTION');
+      md += `## 4. Response Actions & Milestones\n\n`;
+      if (actions.length === 0) md += `*No records*\n\n`;
+      else {
+        md += `| Completion Time | Assignee | Action Description | Outcome / Artifact Hash |\n| :--- | :--- | :--- | :--- |\n`;
+        actions.forEach(a => md += `| ${formatDT(a.eventTime)} | ${a.assignee} | ${a.summary.replace(/\n/g, ' ')} | ${a.artifact || '-'} |\n`);
+        md += `\n`;
+      }
+
+      md += `---\n*Generated by Incident Chronology Studio (Client-Side Only)*\n`;
+      document.getElementById('markdownOutput').textContent = md;
+    }
+
+    // Export & Import JSON
+    document.getElementById('exportJsonBtn').addEventListener('click', () => {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+      const anchor = document.createElement('a');
+      anchor.setAttribute("href", dataStr);
+      anchor.setAttribute("download", `incident-chronology-${Date.now()}.json`);
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+    });
+
+    document.getElementById('importJsonBtn').addEventListener('click', () => document.getElementById('jsonFileInput').click());
+    document.getElementById('jsonFileInput').addEventListener('change', (e) => {
+      const file = e.target.files;
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const imported = JSON.parse(event.target.result);
+          if (imported.items && Array.isArray(imported.items)) {
+            state = imported;
+            render();
+          }
+        } catch (err) {
+          alert('Failed to load JSON file.');
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    // Copy Markdown
+    document.getElementById('copyMdBtn').addEventListener('click', () => {
+      navigator.clipboard.writeText(document.getElementById('markdownOutput').textContent).then(() => {
+        alert(currentLang === 'ja' ? 'Markdownをコピーしました。' : 'Markdown copied to clipboard.');
+      });
+    });
+
+    // Guide Modal
+    const modal = document.getElementById('guideModal');
+    document.getElementById('openGuide').addEventListener('click', () => modal.classList.add('active'));
+    document.getElementById('closeGuide').addEventListener('click', () => modal.classList.remove('active'));
+
+    // Initialization
+    setDefaultTimes();
+    updateLang('en');
+  </script>
+</body>
+</html>
