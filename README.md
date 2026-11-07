@@ -24,7 +24,7 @@ The core design philosophy of Incident Chronology Studio is **absolute data isol
                         (Saved strictly to Local Disk)
 ```
 
-### Core Principles (from `securitydesigin.txt`)
+### Core Principles
 
 * **Local-First & Client-Side Processing**: All processing occurs strictly within the user's local web browser execution context. No data is ever transmitted to external endpoints or cloud services.
 * **No Backend Services & No User Accounts**: Operates without server-side APIs, authentication systems, database persistence, or cloud sync.
