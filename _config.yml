@@ -6,7 +6,8 @@
  
 title: Incident Chronology Studio
 description: Browser-only, zero-server incident chronology and Markdown report generator.
- 
+favicon: /assets/favicon_v4.png
+
 # Project page URL: https://<user>.github.io/incident-chronology-studio/
 url: "https://lex0xf0c.github.io"
 baseurl: "/incident-chronology-studio"
