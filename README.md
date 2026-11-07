@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/screen.png" alt="Secriptorium Logo" width="500" height="500">
+</p>
+
 # 🛡️ Incident Chronology Studio
 
 > **Browser-Only, Zero-Server Incident Chronology & Markdown Report Generator for Security Responders**
