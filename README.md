@@ -13,6 +13,20 @@ Incident Chronology Studio is a lightweight, privacy-first web application desig
 Built specifically for high-security environments, the application operates **100% locally within the browser** with **zero external server communication, zero backend infrastructure, and zero tracking analytics**.
 
 ---
+## What is an Incident Chronology and Why is it Essential?
+
+### 1. What is an Incident Chronology?
+In cyber incident response, a chronology is a structured, multidimensional timeline that records the entire lifecycle of an incident across different operational layers:
+* **Event Time (System Occurrence):** The exact time when an event physically or logically happened within the target system or network.
+* **Detection Time (Observation):** The moment when security monitoring tools or human analysts first detect the anomaly.
+* **Attribution & Decision Time:** The timestamp and rationale of when responders reach a critical conclusion or make a strategic choice.
+* **Action & Communication Milestones:** The precise completion time of containment procedures, forensic evidence collection, or stakeholder notifications.
+
+### 2. Why is it Vital for Cyber Incident Response?
+Cybersecurity incidents are often complex and require weeks or months to fully remediate. Maintaining a robust chronology directly supports effective incident management by providing:
+* **Unambiguous Accountability & Governance:** Recording who made specific decisions, when, and based on what evidence ensures complete transparency and auditability during high-pressure crises.
+* **Dwell Time Analysis:** Separating pre-detection occurrences from detection triggers helps measure the duration of attacker stealth and improves future threat-hunting strategies.
+* **Continuous Improvement & Lessons Learned:** Clearly separating confirmed facts from working hypotheses accelerates root-cause analysis, enabling teams to share critical lessons and strengthen overall organizational resilience.
 
 ## 🔒 Security & Privacy Architecture
 
