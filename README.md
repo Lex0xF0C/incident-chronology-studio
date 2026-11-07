@@ -2,6 +2,8 @@
 
 > **Browser-Only, Zero-Server Incident Chronology & Markdown Report Generator for Security Responders**
 
+[Live demo](https://lex0xf0c.github.io/incident-chronology-studio/)
+
 Incident Chronology Studio is a lightweight, privacy-first web application designed for Security Operations Center (SOC) analysts, CSIRT members, and emergency responders to record timeline events, track decision rationales, and generate structured Markdown incident reports during cyber security incident handling.
 
 Built specifically for high-security environments, the application operates **100% locally within the browser** with **zero external server communication, zero backend infrastructure, and zero tracking analytics**.
