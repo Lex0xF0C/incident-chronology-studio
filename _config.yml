@@ -1,0 +1,30 @@
+# GitHub Pages (Jekyll) configuration for Incident Chronology Studio
+#
+# index.html has no YAML front matter, so Jekyll copies it as-is
+# (no layout, no Liquid processing, no theme injected).
+# The app itself stays 100% client-side and makes no external requests.
+ 
+title: Incident Chronology Studio
+description: Browser-only, zero-server incident chronology and Markdown report generator.
+ 
+# Project page URL: https://<user>.github.io/incident-chronology-studio/
+url: "https://lex0xf0c.github.io"
+baseurl: "/incident-chronology-studio"
+ 
+# No themes or plugins needed for a static single-file app.
+plugins: []
+ 
+# Keep repository-only files out of the published site.
+# LICENSE is intentionally NOT excluded so the MIT notice is published.
+exclude:
+  - README.md
+  - AGENTS.md
+  - tests/
+  - node_modules/
+  - package.json
+  - package-lock.json
+  - Gemfile
+  - Gemfile.lock
+  - .gitignore
+  - .github/
+ 
