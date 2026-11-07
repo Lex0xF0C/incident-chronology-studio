@@ -59,6 +59,7 @@ textarea{resize:vertical;min-height:70px}
 .mc{background:var(--bg2);border:1px solid var(--bd);border-radius:.5rem;max-width:600px;width:100%;max-height:85vh;overflow-y:auto;padding:1.5rem;display:flex;flex-direction:column;gap:1rem}
 .mh{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--bd);padding-bottom:.5rem;gap:.5rem}
 .gs h3{font-size:.95rem;color:var(--blue)}.gs p{font-size:.85rem;color:var(--muted)}
+.empty{display:flex;flex-direction:column;align-items:center;gap:.75rem;text-align:center;color:var(--muted);font-size:.9rem;padding:1.5rem 1rem;border:1px dashed var(--bd);border-radius:.375rem}
 #toast{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--blue);padding:.5rem 1rem;border-radius:.375rem;font-size:.85rem;z-index:200;max-width:90vw}
 </style>
 </head>
@@ -146,6 +147,8 @@ textarea{resize:vertical;min-height:70px}
         <button class="btn-secondary" id="sortBtn" data-i18n="timeline.sortBtn"></button>
         <button class="btn-secondary" id="exportJsonBtn" data-i18n="timeline.exportBtn"></button>
         <button class="btn-secondary" id="importJsonBtn" data-i18n="timeline.importBtn"></button>
+        <button class="btn-secondary" id="sampleBtn" data-i18n="timeline.sampleBtn"></button>
+        <button class="btn-secondary" id="clearBtn" data-i18n="timeline.clearBtn"></button>
         <input type="file" id="jsonFileInput" accept=".json,application/json" hidden>
       </div>
     </div>
@@ -207,6 +210,9 @@ en:{
 "timeline.title":"Timeline Cards","timeline.sortBtn":"Sort (Oldest/Newest)","timeline.exportBtn":"Save JSON","timeline.importBtn":"Load JSON","timeline.filterLabel":"Filter:",
 "filter.all":"Show All","filter.observed":"💻 Event","filter.dec":"🧠 Decisions","filter.act":"🛠️ Actions","filter.comm":"📢 Comms",
 "btn.edit":"Edit","btn.delete":"Delete",
+"timeline.sampleBtn":"📂 Load sample","timeline.clearBtn":"Clear all",
+"empty.text":"No entries yet. Add a note on the left, or load a sample incident to see how it works.",
+"msg.confirmSample":"Replace the current {n} entries with the sample incident?","msg.confirmClear":"Delete all {n} entries? (Save JSON first if you need them.)","msg.sampleLoaded":"Sample loaded. Everything here is fictional.",
 "report.title":"Auto-Generated Markdown Report","report.copyBtn":"📋 Copy Markdown","report.dlBtn":"⬇️ Download .md",
 "msg.empty":"Please enter a timestamp and an event summary.","msg.confirmDel":"Delete this entry?","msg.confirmReplace":"Replace the current {n} entries with the loaded file?",
 "msg.copied":"Markdown copied to clipboard.","msg.copyFail":"Copy failed. Use Download .md instead.","msg.loaded":"JSON loaded.","msg.badJson":"Failed to load JSON (invalid format).",
@@ -237,6 +243,9 @@ ja:{
 "timeline.title":"タイムラインカード","timeline.sortBtn":"昇順/降順 切り替え","timeline.exportBtn":"JSON保存","timeline.importBtn":"JSON読込","timeline.filterLabel":"フィルタ:",
 "filter.all":"すべて表示","filter.observed":"💻 観測事象","filter.dec":"🧠 意思決定","filter.act":"🛠️ 対応","filter.comm":"📢 連絡",
 "btn.edit":"編集","btn.delete":"削除",
+"timeline.sampleBtn":"📂 サンプルを読み込む","timeline.clearBtn":"全消去",
+"empty.text":"まだエントリーがありません。左のフォームからメモを追加するか、サンプルの事例を読み込んで使い方を確認できます。",
+"msg.confirmSample":"現在の {n} 件を、サンプル事例で置き換えますか？","msg.confirmClear":"{n} 件すべてを削除しますか？（必要なら先にJSON保存してください）","msg.sampleLoaded":"サンプルを読み込みました。内容はすべて架空です。",
 "report.title":"自動生成インシデントレポート (Markdown)","report.copyBtn":"📋 コピー","report.dlBtn":"⬇️ .md保存",
 "msg.empty":"日時と概要を入力してください。","msg.confirmDel":"このエントリーを削除しますか？","msg.confirmReplace":"現在の {n} 件を、読み込んだファイルの内容で置き換えますか？",
 "msg.copied":"Markdownをコピーしました。","msg.copyFail":"コピーに失敗しました。.md保存をご利用ください。","msg.loaded":"JSONを読み込みました。","msg.badJson":"JSONの読み込みに失敗しました（形式が不正です）。",
@@ -319,6 +328,7 @@ $('timelineList').addEventListener('click',e=>{
   const b=e.target.closest('button[data-act]');if(!b)return;
   const id=b.dataset.id;
   if(b.dataset.act==='edit')startEdit(id);
+  else if(b.dataset.act==='sample')loadSample();
   else if(b.dataset.act==='del'&&confirm(t('msg.confirmDel'))){
     if(state.editId===id){endEdit();clearForm()}
     state.items=state.items.filter(i=>i.id!==id);touch();
@@ -342,7 +352,7 @@ function render(){
   syncChips();
   const L=state.items.filter(i=>state.filters.has(i.category)).sort((a,b)=>state.sortAsc?cmp(a,b):cmp(b,a));
   $('itemCount').textContent=L.length;
-  $('timelineList').innerHTML=L.map(i=>{
+  $('timelineList').innerHTML=!state.items.length?'<div class="empty"><p>'+esc(t('empty.text'))+'</p><button class="btn-secondary" data-act="sample">'+esc(t('timeline.sampleBtn'))+'</button></div>':L.map(i=>{
     const meta=FIELDS[i.category].filter(f=>i[f]).map(f=>'<div><strong>'+esc(t('c.'+f))+':</strong> '+esc(i[f])+'</div>').join('');
     const anchor=i.timeMode==='text'&&i.timeText?' <small>('+esc(fd(i.time))+')</small>':'';
     return '<div class="card cat-'+i.category+'"><div class="ch"><div><span class="tag tag-'+CLS[i.category]+'">'+esc(t(CATKEY[i.category]))+'</span><span class="tag tag-phase">'+esc(t('ph.'+i.phase))+'</span></div>'
@@ -438,6 +448,46 @@ $('closeGuide').addEventListener('click',closeModal);
 modal.addEventListener('click',e=>{if(e.target===modal)closeModal()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('active'))closeModal()});
 window.addEventListener('beforeunload',e=>{if(state.dirty&&state.items.length){e.preventDefault();e.returnValue=''}});
+
+/* ---------- sample incidents (fictional) ---------- */
+const CM={E:'OBSERVED_EVENT',D:'DECISION',A:'ACTION',C:'COMMUNICATION'};
+const S=(c,time,phase,summary,f1,f2,mode,x)=>{const category=CM[c],fl=FIELDS[category],o={category,time,phase,summary,timeMode:mode||'exact',timeEnd:mode==='range'?x:'',timeText:mode==='text'?x:''};o[fl[0]]=f1;if(fl[1])o[fl[1]]=f2;return o};
+const SAMPLES={
+en:{meta:{title:"SAMPLE-Malware-Infection-Handling",commander:"Alex Example",tz:"UTC+01:00"},items:[
+S('E','2026-11-03T22:40','p0',"Phishing email with a macro-enabled attachment reached a finance mailbox (identified retroactively).","Message-ID <a1b2c3@mail.example.test>",'',"text","Nov 3, late evening (est.)"),
+S('E','2026-11-04T08:15','p0',"Macro executed on FIN-PC-014; PowerShell started with an encoded command.","Sysmon EventID 1, parent=WINWORD.EXE"),
+S('E','2026-11-05T09:12','p1',"EDR alert: suspicious outbound beaconing from FIN-PC-014.","EDR alert #48213, dst 198.51.100.23:443 every ~60s"),
+S('D','2026-11-05T09:25','p2',"Treat as confirmed malware infection. Declare incident, severity High.","SOC Analyst A","Beaconing interval + IP listed in threat-intel feed"),
+S('C','2026-11-05T09:40','p6',"Incident declared; CISO and IT helpdesk notified.","CISO, IT Helpdesk","Phone + Slack #ir-war-room"),
+S('A','2026-11-05T09:55','p3',"Network-isolated FIN-PC-014 via EDR.","Responder B","Host isolated, user informed"),
+S('A','2026-11-05T10:30','p4',"Acquired memory image and triage disk collection.","Responder B","mem.raw, triage zip; hashes recorded","range","2026-11-05T11:30"),
+S('E','2026-11-05T11:10','p2',"Same beacon pattern found on FIN-PC-021 in proxy logs (lateral spread suspected).","Proxy log, 2 hits since 07:50"),
+S('D','2026-11-05T11:20','p2',"Expand scope to the Finance VLAN and hunt for IoCs on all hosts.","Incident Commander","Second host with identical C2 traffic"),
+S('A','2026-11-05T13:00','p5',"Reimaged both hosts; reset affected user passwords.","IT Operations","Rebuilt from golden image","range","2026-11-05T16:30"),
+S('C','2026-11-05T17:00','p6',"Status update: contained, no evidence of data exfiltration so far.","Executive team, Legal","Email (encrypted)"),
+S('D','2026-11-06T10:00','p5',"Close incident after 24h of clean monitoring; schedule lessons-learned meeting.","Incident Commander","No recurrence, scope fully remediated")]},
+ja:{meta:{title:"サンプル-ランサムウェア疑い対応",commander:"セキュリティ太郎",tz:"UTC+09:00"},items:[
+S('E','2026-11-06T03:10','p0',"VPN機器に海外IPから大量のログイン試行（後日ログ調査で判明）。","VPNログ 203.0.113.45 から失敗約1,200件",'',"text","11/6 未明（推定）"),
+S('E','2026-11-07T08:30','p1',"ファイルサーバの共有フォルダで拡張子が一括変更されているとの報告。","ヘルプデスク受付 #20261107-003"),
+S('D','2026-11-07T08:50','p2',"ランサムウェア感染の疑いとして緊急対応を開始。","情シス課長","ランサムノート(README.txt)の存在を確認"),
+S('A','2026-11-07T09:05','p3',"ファイルサーバをネットワークから切断（電源は落とさない）。","インフラ担当","LAN切断、メモリ保全のため電源維持"),
+S('C','2026-11-07T09:30','p6',"経営陣・法務へ一報。個人情報流出の可能性を共有。","経営陣, 法務","電話・暗号化メール"),
+S('C','2026-11-07T13:00','p6',"外部の専門業者およびIPAへ相談。","フォレンジック業者, IPA","電話"),
+S('A','2026-11-07T14:00','p4',"サーバのディスクイメージとログを取得。","フォレンジック業者","イメージ取得、ハッシュ値記録済み","range","2026-11-07T17:30"),
+S('A','2026-11-08T10:00','p5',"バックアップからの復旧作業を開始（隔離環境で検証後に本番へ）。","インフラ担当","復旧計画書 v1")]}};
+function loadSample(){
+  if(state.items.length&&!confirm(t('msg.confirmSample').replace('{n}',state.items.length)))return;
+  const d=SAMPLES[lang]||SAMPLES.en;
+  state.items=d.items.map(cleanItem).filter(Boolean);
+  $('incTitle').value=d.meta.title;$('incCommander').value=d.meta.commander;$('incTz').value=d.meta.tz;
+  endEdit();clearForm();state.dirty=false;render();toast(t('msg.sampleLoaded'));
+}
+$('sampleBtn').addEventListener('click',loadSample);
+$('clearBtn').addEventListener('click',()=>{
+  if(!state.items.length)return;
+  if(!confirm(t('msg.confirmClear').replace('{n}',state.items.length)))return;
+  state.items=[];endEdit();clearForm();state.dirty=false;render();
+});
 
 /* ---------- init ---------- */
 $('eventTime').value=nowLocal();
