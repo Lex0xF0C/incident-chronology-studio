@@ -69,6 +69,15 @@ textarea{resize:vertical;min-height:70px}
 .gempty{font-size:.85rem;color:var(--muted)}
 .slotbox{font-size:.8rem;border:1px dashed var(--teal);border-radius:.375rem;padding:.5rem;display:flex;flex-direction:column;gap:.35rem;background:rgba(45,212,191,.08);overflow-wrap:anywhere}
 .slotbox .btn-xs{align-self:flex-start}
+.stepper{display:flex;flex-wrap:wrap;gap:.35rem}
+.step{background:var(--bg);border:1px solid var(--bd);color:var(--muted);border-radius:.375rem;padding:.3rem .55rem;font-size:.75rem;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;text-align:left}
+.step small{font-family:var(--mono);font-size:.65rem;color:var(--muted)}
+.step.reached{border-color:var(--green);color:var(--text)}
+.step.reopened{border-color:var(--rose);color:var(--text)}
+.gnext{background:rgba(251,191,36,.06);border:1px solid var(--amber);border-radius:.375rem;padding:.6rem;display:flex;flex-direction:column;gap:.5rem}
+.gnext h3{font-size:.85rem;color:var(--amber)}
+.gdet{font-size:.75rem;color:var(--muted)}.gdet summary{cursor:pointer}.gdet li{margin:.25rem 0 0 1rem}
+.gcsf[title]{cursor:help}
 .ct{font-family:var(--mono);font-size:.8rem;color:var(--amber);font-weight:600}.ct small{color:var(--muted);font-weight:400}
 .cb{font-size:.9rem;white-space:pre-wrap;overflow-wrap:anywhere}
 .cm{font-size:.75rem;color:var(--muted);background:rgba(255,255,255,.03);padding:.4rem;border-radius:.25rem;display:flex;flex-direction:column;gap:.25rem;overflow-wrap:anywhere}
@@ -181,8 +190,12 @@ textarea{resize:vertical;min-height:70px}
       </div>
     </div>
     <div class="gnote" data-i18n="tpl.disclaimer"></div>
+    <div class="gnote" data-i18n="tpl.step.title"></div>
+    <div class="stepper" id="stepper"></div>
+    <div class="gnext" id="guideNext" hidden></div>
     <div class="gprog" id="tplProgress"></div>
     <div class="gboard" id="guideBoard"></div>
+    <details class="gdet" id="csfDetails"><summary data-i18n="tpl.csfLegend"></summary><div id="csfList"></div></details>
   </div>
 
   <div class="panel">
@@ -275,13 +288,13 @@ en:{
 "guide.sec2Title":"2. Retroactive Attack Events","guide.sec2Body":"If log analysis reveals an attack started days ago, log it under Phase \"0. Occurrence / Latency\" so your timeline accurately reflects when the attacker first got in.",
 "guide.sec3Title":"3. Privacy First (Zero Leaks)","guide.sec3Body":"Everything stays inside your browser's memory. Nothing is stored or sent anywhere, so Save JSON before closing the tab; you will be warned if there are unsaved entries.",
 "form.milestoneLabel":"4. Milestone (optional, used for durations)","form.milestoneNone":"— none —",
-"ms.occurred":"Occurred","ms.detected":"Detected","ms.declared":"Declared","ms.contained":"Contained","ms.eradicated":"Eradicated","ms.recovered":"Recovered","ms.closed":"Closed",
+"ms.occurred":"Occurred","ms.detected":"Detected","ms.declared":"Declared","ms.contained":"Contained","ms.eradicated":"Eradicated","ms.recovered":"Recovered","ms.closed":"Closed","ms.reopened":"Reopened",
 "report.langLabel":"Report language","report.csvBtn":"📊 Download .csv",
 "r.defaultTitle":"Incident Response Report","r.generated":"Generated","r.commander":"Incident Commander","r.tz":"Timezone of recorded times","r.na":"N/A","r.none":"No records",
 "r.sec.ms":"Key Milestones & Durations","r.sec.timeline":"Chronological Timeline","r.sec.events":"Confirmed Observed Events & IoCs","r.sec.notes":"Context & Potential Notes (Unconfirmed)","r.sec.decisions":"Decisions & Investigation Attribution Log","r.sec.actions":"Response Actions & Outcomes","r.sec.comms":"Stakeholder Communications History",
-"r.th.time":"Time","r.th.timeEnd":"End time","r.th.timeText":"Time description","r.th.type":"Type","r.th.phase":"Phase","r.th.milestone":"Milestone","r.th.summary":"Summary","r.th.details":"Details","r.th.interval":"Interval","r.th.duration":"Duration","r.th.note":"Note",
-"r.est":"(estimated)","r.orderWarn":"check order",
-"r.durNote":"Durations are calculated from the entered timestamps and assume one common timezone. The earliest entry is used for each milestone; for completion milestones (Contained, Eradicated, Recovered, Closed) a time range counts at its end. Rows marked (estimated) involve a free-text time, so the timestamp is only approximate.",
+"r.th.time":"Time","r.th.timeEnd":"End time","r.th.timeText":"Time description","r.th.type":"Type","r.th.phase":"Phase","r.th.milestone":"Milestone","r.th.summary":"Summary","r.th.details":"Details","r.th.interval":"Interval","r.th.duration":"Duration (to first record)","r.th.note":"Note",
+"r.est":"(estimated)","r.overlap":"overlaps or runs in parallel; check the timestamps if unexpected",
+"r.durNote":"Durations count from the first record of the starting milestone, using the entered timestamps, and assume one common timezone. Where a milestone has several entries, the next column gives the time to its last entry (for example, full containment). Response work can run in parallel or be repeated, so intervals may overlap. For completion milestones (Contained, Eradicated, Recovered, Closed) a time range counts at its end. Rows marked (estimated) involve a free-text time, so the timestamp is only approximate.",
 "r.footer":"Generated by Incident Chronology Studio (Client-Side Only)",
 "tpl.title":"Guide: past, now, next","tpl.pick":"Incident type","tpl.none":"— not selected —","tpl.hints":"Show hints",
 "tpl.empty":"Pick an incident type to get a fill-in-the-blanks guide. It only asks what to confirm, decide and record.",
@@ -293,7 +306,11 @@ en:{
 "tpl.progress":"Recorded {a} / {n} · Unknown {u} · N/A {x}","tpl.naPrompt":"Reason for N/A (optional)",
 "tpl.slotBox":"Guide item","tpl.slotClear":"Detach from guide","tpl.unknownPrefix":"Unknown: ",
 "r.sec.open":"Open Items (Guide Template)","r.openNote":"Items of the selected guide template that are not yet recorded. CSF IDs are reference labels only and do not indicate compliance.","r.noOpen":"No open items",
-"r.th.col":"Stage","r.th.item":"Item","r.th.status":"Status","r.th.csf":"CSF ref","r.th.guide":"Guide item","r.th.template":"Template"
+"r.th.col":"Stage","r.th.item":"Item","r.th.status":"Status","r.th.csf":"CSF ref","r.th.guide":"Guide item","r.th.template":"Template",
+"tpl.step.title":"Milestone record: when each was reached (click one to add an entry)","tpl.next.title":"Next up (3)","tpl.next.none":"Nothing left to start. Review the ❓ unknown items.",
+"tpl.next.note":"The order is only a guide. Record things in any order, and set aside what is not relevant right now.","tpl.csfLegend":"What the CSF labels mean",
+"tpl.step.reopen":"reopened","tpl.btn.later":"Later","tpl.next.reset":"Restore skipped ({n})",
+"r.first":"First","r.last":"Last","r.th.last":"Last","r.th.count":"Entries","r.th.durationLast":"To last record"
 },
 ja:{
 "header.privacy":"100% ローカル動作 / 外部通信なし","header.guideBtn":"💡 メモのコツ (Tips)",
@@ -333,13 +350,13 @@ ja:{
 "guide.sec2Title":"2. 発覚より前の出来事は「発生・潜伏」に","guide.sec2Body":"ログ調査で「実は数日前に侵入されていた」と判明した過去の痕跡は、フェーズ「0. 発生・潜伏」を選ぶと時間軸が綺麗に繋がります。",
 "guide.sec3Title":"3. 完全ローカルで安全","guide.sec3Body":"入力したデータはブラウザのメモリ内だけに存在し、どこにも保存・送信されません。タブを閉じる前にJSON保存してください（未保存のエントリーがある場合は警告します）。",
 "form.milestoneLabel":"4. マイルストーン（任意・所要時間の算出に使用）","form.milestoneNone":"— なし —",
-"ms.occurred":"発生","ms.detected":"検知","ms.declared":"宣言","ms.contained":"封じ込め完了","ms.eradicated":"根絶完了","ms.recovered":"復旧完了","ms.closed":"クローズ",
+"ms.occurred":"発生","ms.detected":"検知","ms.declared":"宣言","ms.contained":"封じ込め完了","ms.eradicated":"根絶完了","ms.recovered":"復旧完了","ms.closed":"クローズ","ms.reopened":"再開",
 "report.langLabel":"レポート言語","report.csvBtn":"📊 .csv保存",
 "r.defaultTitle":"インシデント対応報告書","r.generated":"生成日時","r.commander":"インシデント対応責任者","r.tz":"記録時刻のタイムゾーン","r.na":"未設定","r.none":"記録なし",
 "r.sec.ms":"主要マイルストーンと所要時間","r.sec.timeline":"時系列タイムライン","r.sec.events":"確認済みの観測事象・IoC","r.sec.notes":"補足・可能性メモ（未確認）","r.sec.decisions":"意思決定・判断記録","r.sec.actions":"対応アクションと結果","r.sec.comms":"関係者への連絡履歴",
-"r.th.time":"日時","r.th.timeEnd":"終了日時","r.th.timeText":"時間の表記","r.th.type":"種別","r.th.phase":"フェーズ","r.th.milestone":"マイルストーン","r.th.summary":"概要","r.th.details":"詳細","r.th.interval":"区間","r.th.duration":"所要時間","r.th.note":"備考",
-"r.est":"（推定）","r.orderWarn":"順序要確認",
-"r.durNote":"所要時間は入力された日時から算出しており、すべて同一のタイムゾーンで記録されている前提です。各マイルストーンは最も早いエントリーを採用し、完了系（封じ込め・根絶・復旧・クローズ）で期間指定の場合は終了時刻を用います。（推定）は自由記述の時間を含むため、日時はおおよその値です。",
+"r.th.time":"日時","r.th.timeEnd":"終了日時","r.th.timeText":"時間の表記","r.th.type":"種別","r.th.phase":"フェーズ","r.th.milestone":"マイルストーン","r.th.summary":"概要","r.th.details":"詳細","r.th.interval":"区間","r.th.duration":"所要時間（初回記録まで）","r.th.note":"備考",
+"r.est":"（推定）","r.overlap":"並行または重複しています。意図と異なる場合は時刻を確認してください",
+"r.durNote":"所要時間は、開始側マイルストーンの最初の記録から、入力された日時をもとに算出しており、すべて同一のタイムゾーンで記録されている前提です。マイルストーンに複数のエントリーがある場合は、次の列に最終エントリーまでの時間（例: 完全に封じ込めるまで）を示します。対応は並行したり繰り返されたりするため、区間が重なることがあります。完了系（封じ込め・根絶・復旧・クローズ）で期間指定の場合は終了時刻を用います。（推定）は自由記述の時間を含むため、日時はおおよその値です。",
 "r.footer":"Incident Chronology Studio（クライアントサイドのみ）で生成",
 "tpl.title":"ガイド: 過去・いま・これから","tpl.pick":"事案タイプ","tpl.none":"— 未選択 —","tpl.hints":"ヒントを表示",
 "tpl.empty":"事案タイプを選ぶと、空欄を埋めていくガイドが表示されます。確認・判断・記録すべきことを問いかけるだけです。",
@@ -351,7 +368,11 @@ ja:{
 "tpl.progress":"記入済み {a} / {n}・不明 {u}・対象外 {x}","tpl.naPrompt":"対象外とする理由（任意）",
 "tpl.slotBox":"ガイド項目","tpl.slotClear":"ガイドとの紐づけを外す","tpl.unknownPrefix":"不明: ",
 "r.sec.open":"未解決事項（ガイドテンプレート）","r.openNote":"選択したガイドテンプレートのうち、まだ記録されていない項目です。CSF の ID は参考表示であり、準拠を示すものではありません。","r.noOpen":"未解決事項なし",
-"r.th.col":"区分","r.th.item":"項目","r.th.status":"状態","r.th.csf":"CSF参考","r.th.guide":"ガイド項目","r.th.template":"テンプレート"
+"r.th.col":"区分","r.th.item":"項目","r.th.status":"状態","r.th.csf":"CSF参考","r.th.guide":"ガイド項目","r.th.template":"テンプレート",
+"tpl.step.title":"マイルストーンの記録状況: いつ到達したか（クリックでエントリーを追加）","tpl.next.title":"次にやること（3件）","tpl.next.none":"着手していない項目はありません。❓不明の項目を見直してください。",
+"tpl.next.note":"並び順は目安です。どの順番でも記録でき、いま関係のない項目は後回しにできます。","tpl.csfLegend":"CSF 参考ラベルの意味",
+"tpl.step.reopen":"再開中","tpl.btn.later":"後で","tpl.next.reset":"後回しを戻す（{n}件）",
+"r.first":"初回","r.last":"最終","r.th.last":"最終","r.th.count":"件数","r.th.durationLast":"最終記録まで"
 }};
 
 const $=id=>document.getElementById(id);
@@ -363,9 +384,9 @@ const CATKEY={OBSERVED_EVENT:'cat.observedEvent',DECISION:'cat.decision',ACTION:
 const CLS={OBSERVED_EVENT:'event',DECISION:'decision',ACTION:'action',COMMUNICATION:'comm',CONTEXT_NOTE:'note'};
 const PH=['p0','p1','p2','p3','p4','p5','p6'];
 const MODES=['exact','range','text'];
-const MS=['occurred','detected','declared','contained','eradicated','recovered','closed'];
+const MS=['occurred','detected','declared','contained','eradicated','recovered','closed','reopened'];
 const DONE=['contained','eradicated','recovered','closed'];
-const PAIRS=[['occurred','detected'],['detected','declared'],['declared','contained'],['detected','contained'],['contained','eradicated'],['eradicated','recovered'],['recovered','closed'],['occurred','closed']];
+const PAIRS=[['occurred','detected'],['detected','declared'],['declared','contained'],['detected','contained'],['contained','eradicated'],['eradicated','recovered'],['recovered','closed'],['occurred','closed'],['closed','reopened']];
 const TRE=/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 const COLS=['past','now','next'];
 /* guide items: [column, category, phase, milestone, CSF reference label] */
@@ -385,7 +406,7 @@ const hasTI=id=>typeof id==='string'&&Object.prototype.hasOwnProperty.call(TI,id
 const tplIds=id=>{const a=[...CORE,...(EXTRA[id]||[])];return COLS.flatMap(c=>a.filter(x=>TI[x][0]===c))};
 const itx=(id,l)=>(TPLT[l]&&TPLT[l][id])||TPLT.en[id]||[id,''];
 let lang='en',rlang='en';
-const state={category:'OBSERVED_EVENT',sortAsc:true,filters:new Set(CATS),items:[],editId:null,dirty:false,tpl:'',slotNa:{},hints:true,pendingSlot:''};
+const state={category:'OBSERVED_EVENT',sortAsc:true,filters:new Set(CATS),items:[],editId:null,dirty:false,tpl:'',slotNa:{},hints:true,pendingSlot:'',later:new Set()};
 const t=k=>i18n[lang][k]??i18n.en[k]??k;
 const tr=k=>i18n[rlang][k]??i18n.en[k]??k;
 const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
@@ -506,23 +527,29 @@ let lastMd='';
 const mc=s=>(s===undefined||s===null||s===''?'-':String(s)).replace(/\|/g,'\\|').replace(/\r?\n/g,'<br>');
 const tbl=(h,rows)=>rows.length?'| '+h.join(' | ')+' |\n|'+h.map(()=>' :--- |').join('')+'\n'+rows.map(r=>'| '+r.map(mc).join(' | ')+' |\n').join('')+'\n':'*'+tr('r.none')+'*\n\n';
 function fmtDur(ms){
-  const m=Math.round(ms/60000),d=Math.floor(m/1440),h=Math.floor(m%1440/60),n=m%60,ja=rlang==='ja',p=[];
+  const neg=ms<0,m=Math.round(Math.abs(ms)/60000),d=Math.floor(m/1440),h=Math.floor(m%1440/60),n=m%60,ja=rlang==='ja',p=[];
   if(d)p.push(d+(ja?'日':'d'));if(h)p.push(h+(ja?'時間':'h'));if(n||!p.length)p.push(n+(ja?'分':'m'));
-  return p.join(ja?'':' ');
+  return (neg&&m?'-':'')+p.join(ja?'':' ');
+}
+function msGot(L){
+  return MS.map(k=>{
+    const c=L.filter(i=>i.milestone===k&&TRE.test(mst(i))).sort((a,b)=>mst(a).localeCompare(mst(b)));
+    if(!c.length)return null;
+    const f=c[0],l=c[c.length-1];
+    return {k,n:c.length,t:mst(f),i:f,est:f.timeMode==='text',lt:mst(l),li:l,lest:l.timeMode==='text'};
+  }).filter(Boolean);
 }
 function msSection(L){
-  const got=MS.map(k=>{
-    const c=L.filter(i=>i.milestone===k&&TRE.test(mst(i))).sort((a,b)=>mst(a).localeCompare(mst(b)));
-    return c.length?{k,t:mst(c[0]),i:c[0],est:c[0].timeMode==='text'}:null;
-  }).filter(Boolean);
+  const got=msGot(L);
   const by={};got.forEach(g=>by[g.k]=g);
-  let o=tbl([tr('r.th.milestone'),tr('r.th.time'),tr('r.th.summary')],got.map(g=>[tr('ms.'+g.k),fd(g.t)+(g.est?' '+tr('r.est'):''),g.i.summary]));
+  let o=tbl([tr('r.th.milestone'),tr('r.th.time'),tr('r.th.last'),tr('r.th.count'),tr('r.th.summary')],got.map(g=>[tr('ms.'+g.k),fd(g.t)+(g.est?' '+tr('r.est'):''),g.n>1?fd(g.lt)+(g.lest?' '+tr('r.est'):''):'-',g.n,g.n>1?tr('r.first')+': '+g.i.summary+'\n'+tr('r.last')+': '+g.li.summary:g.i.summary]));
   const rows=PAIRS.filter(p=>by[p[0]]&&by[p[1]]).map(p=>{
-    const a=by[p[0]],b=by[p[1]],d=tms(b.t)-tms(a.t),n=[];
-    if(d<0)n.push(tr('r.orderWarn'));if(a.est||b.est)n.push(tr('r.est'));
-    return [tr('ms.'+p[0])+' → '+tr('ms.'+p[1]),d<0?'-':fmtDur(d),n.join('; ')];
+    const a=by[p[0]],b=by[p[1]],d=tms(b.t)-tms(a.t),dl=b.n>1?tms(b.lt)-tms(a.t):null,n=[];
+    if(d<0||(dl!==null&&dl<0))n.push(tr('r.overlap'));
+    if(a.est||b.est||(dl!==null&&b.lest))n.push(tr('r.est'));
+    return [tr('ms.'+p[0])+' → '+tr('ms.'+p[1]),fmtDur(d),dl===null?'-':fmtDur(dl),n.join('; ')];
   });
-  if(rows.length)o+=tbl([tr('r.th.interval'),tr('r.th.duration'),tr('r.th.note')],rows)+'*'+tr('r.durNote')+'*\n\n';
+  if(rows.length)o+=tbl([tr('r.th.interval'),tr('r.th.duration'),tr('r.th.durationLast'),tr('r.th.note')],rows)+'*'+tr('r.durNote')+'*\n\n';
   return o;
 }
 function openSection(){
@@ -583,7 +610,7 @@ $('copyMdBtn').addEventListener('click',()=>{
 
 /* ---------- JSON export / import ---------- */
 $('exportJsonBtn').addEventListener('click',()=>{
-  const data={app:'incident-chronology-studio',schemaVersion:4,meta:{title:$('incTitle').value,commander:$('incCommander').value,tz:$('incTz').value},template:{id:state.tpl,na:state.slotNa},items:state.items};
+  const data={app:'incident-chronology-studio',schemaVersion:5,meta:{title:$('incTitle').value,commander:$('incCommander').value,tz:$('incTz').value},template:{id:state.tpl,na:state.slotNa},items:state.items};
   download(JSON.stringify(data,null,2),'incident-chronology-'+stamp()+'.json','application/json');
   state.dirty=false;
 });
@@ -614,7 +641,7 @@ $('jsonFileInput').addEventListener('change',e=>{
         if(d.template.na&&typeof d.template.na==='object')Object.keys(d.template.na).forEach(k=>{if(hasTI(k))na[k]=str(d.template.na[k],300)});
       }
       if(state.items.length&&!confirm(t('msg.confirmReplace').replace('{n}',state.items.length)))return;
-      state.items=items;state.tpl=tplId;state.slotNa=na;
+      state.items=items;state.tpl=tplId;state.slotNa=na;state.later.clear();
       if(d.meta&&typeof d.meta==='object'){
         $('incTitle').value=str(d.meta.title,200)||$('incTitle').value;
         $('incCommander').value=str(d.meta.commander,200);
@@ -647,7 +674,7 @@ S('E','2026-11-04T08:15','p0',"Macro executed on FIN-PC-014; PowerShell started 
 M('detected',S('E','2026-11-05T09:12','p1',"EDR alert: suspicious outbound beaconing from FIN-PC-014.","EDR alert #48213, dst 198.51.100.23:443 every ~60s")),
 M('declared',S('D','2026-11-05T09:25','p2',"Treat as confirmed malware infection. Declare incident, severity High.","SOC Analyst A","Beaconing interval + IP listed in threat-intel feed")),
 S('C','2026-11-05T09:40','p6',"Incident declared; CISO and IT helpdesk notified.","CISO, IT Helpdesk","Phone + Slack #ir-war-room"),
-S('A','2026-11-05T09:55','p3',"Network-isolated FIN-PC-014 via EDR.","Responder B","Host isolated, user informed"),
+M('contained',S('A','2026-11-05T09:55','p3',"Network-isolated FIN-PC-014 via EDR.","Responder B","Host isolated, user informed")),
 S('A','2026-11-05T10:30','p4',"Acquired memory image and triage disk collection.","Responder B","mem.raw, triage zip; hashes recorded","range","2026-11-05T11:30"),
 S('N','2026-11-05T10:50','p2',"Other Finance hosts may be beaconing too (unconfirmed).","Same phishing mail went to 6 Finance mailboxes","Search proxy logs for 198.51.100.23"),
 S('E','2026-11-05T11:10','p2',"Same beacon pattern found on FIN-PC-021 in proxy logs (lateral spread suspected).","Proxy log, 2 hits since 07:50"),
@@ -671,7 +698,7 @@ function loadSample(){
   if(state.items.length&&!confirm(t('msg.confirmSample').replace('{n}',state.items.length)))return;
   const d=SAMPLES[lang]||SAMPLES.en;
   state.items=d.items.map((o,k)=>({...o,slot:(d.slots&&d.slots[k])||''})).map(cleanItem).filter(Boolean);
-  state.tpl=d.tpl||'';state.slotNa={};
+  state.tpl=d.tpl||'';state.slotNa={};state.later.clear();
   $('incTitle').value=d.meta.title;$('incCommander').value=d.meta.commander;$('incTz').value=d.meta.tz;
   endEdit();clearForm();state.dirty=false;render();toast(t('msg.sampleLoaded'));
 }
@@ -679,7 +706,7 @@ $('sampleBtn').addEventListener('click',loadSample);
 $('clearBtn').addEventListener('click',()=>{
   if(!state.items.length)return;
   if(!confirm(t('msg.confirmClear').replace('{n}',state.items.length)))return;
-  state.items=[];state.tpl='';state.slotNa={};endEdit();clearForm();state.dirty=false;render();
+  state.items=[];state.tpl='';state.slotNa={};state.later.clear();endEdit();clearForm();state.dirty=false;render();
 });
 
 /* ---------- guide templates: [question, hint] per item ---------- */
@@ -747,6 +774,53 @@ ja:{
 'a.phish':["フィッシングの指標は遮断・共有したか？","送信元、件名、URL。どこで遮断し、誰に共有したかを記録します。"]
 }};
 
+/* ---------- CSF reference labels (paraphrased outcome statements) ---------- */
+const CSFD={
+en:{'DE.AE-08':'Declare an incident when events meet the defined incident criteria','RS.MA-01':'Run the response plan with relevant third parties once an incident is declared','RS.MA-02':'Triage and validate incident reports','RS.MA-03':'Categorize and prioritize incidents','RS.MA-04':'Escalate or elevate incidents as needed','RS.AN-03':'Establish what happened and the root cause','RS.AN-07':'Collect incident data and keep its integrity and provenance','RS.AN-08':'Estimate and validate the magnitude of the incident','RS.MI-01':'Contain the incident','RS.MI-02':'Eradicate the incident','RS.CO-02':'Notify internal and external stakeholders','RS.CO-03':'Share information with designated stakeholders','RC.RP-03':'Verify the integrity of backups and restoration assets before use','RC.RP-05':'Verify restored assets and confirm normal operation','RC.RP-06':'Declare the end of recovery against criteria and complete the documentation'},
+ja:{'DE.AE-08':'事象が定めたインシデント基準を満たしたら、インシデントとして宣言する','RS.MA-01':'宣言後、関係する第三者とともに対応計画を実行する','RS.MA-02':'インシデントの報告をトリアージし、検証する','RS.MA-03':'インシデントを分類し、優先順位を付ける','RS.MA-04':'必要に応じてエスカレーション（資源・期限の拡大）またはエレベーション（上位への報告）を行う','RS.AN-03':'何が起きたか、根本原因は何かを明らかにする','RS.AN-07':'インシデントのデータを収集し、完全性と来歴を保つ','RS.AN-08':'インシデントの規模を見積もり、検証する','RS.MI-01':'インシデントを封じ込める','RS.MI-02':'インシデントを根絶する','RS.CO-02':'組織の内外の関係者に通知する','RS.CO-03':'指定した関係者と情報を共有する','RC.RP-03':'バックアップや復旧用の資産を使う前に、完全性を確認する','RC.RP-05':'復旧した資産を確認し、通常運用に戻ったことを確かめる','RC.RP-06':'基準に照らして復旧の終了を宣言し、記録を完成させる'}};
+const csfDesc=id=>(CSFD[lang]&&CSFD[lang][id])||CSFD.en[id]||'';
+const csfSpans=s=>String(s).split(', ').map(id=>'<span class="gcsf" title="'+esc(csfDesc(id))+'">'+esc(id)+'</span>').join(' ');
+function renderCsfLegend(ids){
+  const u=[];ids.forEach(id=>TI[id][4].split(', ').forEach(c=>{if(!u.includes(c))u.push(c)}));
+  $('csfList').innerHTML='<ul>'+u.map(c=>'<li><span class="gcsf">'+esc(c)+'</span> '+esc(csfDesc(c))+'</li>').join('')+'</ul>';
+}
+
+/* ---------- milestone stepper and next-3 suggestions (derived from the timeline, nothing stored) ---------- */
+const MSDEF={occurred:['OBSERVED_EVENT','p0'],detected:['OBSERVED_EVENT','p1'],declared:['DECISION','p2'],contained:['ACTION','p3'],eradicated:['ACTION','p5'],recovered:['OBSERVED_EVENT','p5'],closed:['DECISION','p5'],reopened:['DECISION','p2']};
+function renderStepper(){
+  const by={};msGot(state.items).forEach(g=>by[g.k]=g);
+  const reopen=!!(by.reopened&&by.closed&&by.reopened.lt>by.closed.lt);
+  $('stepper').innerHTML=MS.filter(k=>k!=='reopened'||by.reopened||by.closed).map(k=>{
+    const g=by[k];let cls='step',sym='○',tm='';
+    if(g){
+      cls+=' reached';sym='✔';
+      tm=(g.est?'~':'')+g.t.slice(5).replace('T',' ');
+      if(g.n>1)tm+=' – '+(g.lest?'~':'')+g.lt.slice(5).replace('T',' ')+' ×'+g.n;
+      if(k==='closed'&&reopen){cls+=' reopened';sym='↩';tm+=' · '+t('tpl.step.reopen')}
+    }
+    return '<button type="button" class="'+cls+'" data-ms="'+k+'">'+sym+' '+esc(t('ms.'+k))+(tm?'<small>'+esc(tm)+'</small>':'')+'</button>';
+  }).join('');
+}
+function nextItems(){
+  return tplIds(state.tpl).filter(id=>slotStatus(id)==='todo'&&!state.later.has(id)).slice(0,3);
+}
+function renderNext(){
+  const nx=$('guideNext'),L=nextItems(),sk=tplIds(state.tpl).filter(id=>state.later.has(id)&&slotStatus(id)==='todo').length;
+  nx.hidden=false;
+  nx.innerHTML='<h3>'+esc(t('tpl.next.title'))+'</h3>'
+    +(L.length?L.map(id=>{const x=itx(id,lang);return '<div class="gi"><div class="gh"><span class="tag tag-phase">'+esc(t('tpl.col.'+TI[id][0]))+'</span>'+csfSpans(TI[id][4])+'</div><div class="gq">'+esc(x[0])+'</div><div class="ca"><button class="btn-xs" data-gact="fill" data-id="'+esc(id)+'">'+esc(t('tpl.btn.fill'))+'</button><button class="btn-xs" data-gact="later" data-id="'+esc(id)+'">'+esc(t('tpl.btn.later'))+'</button></div></div>'}).join(''):'<div class="gt">'+esc(t('tpl.next.none'))+'</div>')
+    +(sk?'<div class="ca"><button class="btn-xs" data-gact="laterReset">'+esc(t('tpl.next.reset').replace('{n}',sk))+'</button></div>':'')
+    +(state.hints?'<div class="gt">'+esc(t('tpl.next.note'))+'</div>':'');
+}
+function fillMs(k){
+  const m=state.tpl&&tplIds(state.tpl).find(id=>TI[id][3]===k&&slotStatus(id)!=='done');
+  if(m){fillSlot(m,false);return}
+  const d=MSDEF[k];
+  endEdit();clearForm();setCat(d[0]);setMode('exact');
+  $('phase').value=d[1];$('milestone').value=k;
+  $('summary').focus();window.scrollTo({top:0,behavior:'smooth'});
+}
+
 /* ---------- guide board ---------- */
 function slotStatus(id){
   const L=state.items.filter(i=>i.slot===id);
@@ -755,20 +829,23 @@ function slotStatus(id){
   return Object.prototype.hasOwnProperty.call(state.slotNa,id)?'na':'todo';
 }
 function renderGuide(){
-  const box=$('guideBoard');
+  const box=$('guideBoard'),nx=$('guideNext');
   $('tplSelect').value=state.tpl;
   $('hintBtn').setAttribute('aria-pressed',state.hints);
-  if(!state.tpl){box.innerHTML='<p class="gempty">'+esc(t('tpl.empty'))+'</p>';$('tplProgress').textContent='';return}
+  renderStepper();
+  if(!state.tpl){box.innerHTML='<p class="gempty">'+esc(t('tpl.empty'))+'</p>';$('tplProgress').textContent='';nx.hidden=true;nx.innerHTML='';$('csfList').innerHTML='';return}
+  renderNext();
   const ids=tplIds(state.tpl),n={todo:0,done:0,unknown:0,na:0};
   box.innerHTML=COLS.map(c=>'<div class="gcol"><h3>'+esc(t('tpl.col.'+c))+'</h3>'+ids.filter(id=>TI[id][0]===c).map(id=>{
     const st=slotStatus(id),x=itx(id,lang);n[st]++;
     const b=(a,k)=>'<button class="btn-xs" data-gact="'+a+'" data-id="'+esc(id)+'">'+esc(t(k))+'</button>';
-    return '<div class="gi st-'+st+'"><div class="gh"><span class="tag tag-phase">'+esc(t('tpl.st.'+st))+'</span><span class="gcsf">'+esc(TI[id][4])+'</span></div>'
+    return '<div class="gi st-'+st+'"><div class="gh"><span class="tag tag-phase">'+esc(t('tpl.st.'+st))+'</span>'+csfSpans(TI[id][4])+'</div>'
       +'<div class="gq">'+esc(x[0])+'</div>'+(state.hints?'<div class="gt">'+esc(x[1])+'</div>':'')
       +(st==='na'&&state.slotNa[id]?'<div class="gt">'+esc(state.slotNa[id])+'</div>':'')
       +'<div class="ca">'+b('fill','tpl.btn.fill')+(st==='todo'||st==='na'?b('unknown','tpl.btn.unknown'):'')+(st==='todo'?b('na','tpl.btn.na'):'')+(st==='na'?b('unna','tpl.btn.undoNa'):'')+'</div></div>';
   }).join('')+'</div>').join('');
   $('tplProgress').textContent=t('tpl.progress').replace('{a}',n.done).replace('{n}',ids.length).replace('{u}',n.unknown).replace('{x}',n.na);
+  renderCsfLegend(ids);
 }
 function fillSlot(id,unk){
   const d=TI[id],q=itx(id,lang)[0];
@@ -778,16 +855,21 @@ function fillSlot(id,unk){
   if(unk){$('summary').value=t('tpl.unknownPrefix')+q;$('noteVerify').value=q}
   state.pendingSlot=id;showSlot();$('summary').focus();window.scrollTo({top:0,behavior:'smooth'});
 }
-$('guideBoard').addEventListener('click',e=>{
+const guideClick=e=>{
   const b=e.target.closest('button[data-gact]');if(!b)return;
-  const id=b.dataset.id,a=b.dataset.gact;if(!hasTI(id))return;
+  const id=b.dataset.id,a=b.dataset.gact;
+  if(a==='laterReset'){state.later.clear();render();return}
+  if(!hasTI(id))return;
+  if(a==='later'){state.later.add(id);render();return}
   if(a==='fill')fillSlot(id,false);
   else if(a==='unknown')fillSlot(id,true);
   else if(a==='na'){const r=prompt(t('tpl.naPrompt'),'');if(r===null)return;state.slotNa[id]=r.slice(0,300);touch()}
   else if(a==='unna'){delete state.slotNa[id];touch()}
-});
+};
+$('guideBoard').addEventListener('click',guideClick);$('guideNext').addEventListener('click',guideClick);
+$('stepper').addEventListener('click',e=>{const b=e.target.closest('button[data-ms]');if(b&&MS.includes(b.dataset.ms))fillMs(b.dataset.ms)});
 $('slotBox').addEventListener('click',e=>{if(e.target.closest('#slotClear')){state.pendingSlot='';showSlot()}});
-$('tplSelect').addEventListener('change',e=>{state.tpl=TPLS.includes(e.target.value)?e.target.value:'';state.dirty=true;render()});
+$('tplSelect').addEventListener('change',e=>{state.tpl=TPLS.includes(e.target.value)?e.target.value:'';state.later.clear();state.dirty=true;render()});
 $('hintBtn').addEventListener('click',()=>{state.hints=!state.hints;render()});
 
 /* ---------- init ---------- */
