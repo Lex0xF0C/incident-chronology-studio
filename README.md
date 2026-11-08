@@ -38,8 +38,8 @@ This tool keeps those answers in one place, with as little friction as a whitebo
   | ❓ Context & Potential Note | Unconfirmed information. Park it here, then **Confirm → Observed Event** once verified |
 * **Flexible time input**: exact timestamp, a start → end range, or free text such as `Nov 5 night` for retroactive findings. A timestamp is always kept as the sort anchor. A timezone field is recorded in the report.
 * **Incident phases (0–6)**: Occurrence / Latency (pre-detection), Detection, Triage, Containment, Forensics, Eradication / Recovery, Communication.
-* **Milestones and durations**: optionally tag any entry as *Occurred*, *Detected*, *Declared*, *Contained*, *Eradicated*, *Recovered* or *Closed*. The report lists the milestones and calculates the time between them (for example Occurred → Detected, Detected → Contained). See [Milestones and durations](#milestones-and-durations) for the exact rules.
-* **Guide templates (past, now, next)**: pick an incident type and fill in the blanks. Each question opens the entry form with the suggested category, phase and milestone already set. See [Guide templates](#guide-templates).
+* **Milestones and durations**: optionally tag any entry as *Occurred*, *Detected*, *Declared*, *Contained*, *Eradicated*, *Recovered*, *Closed* or *Reopened*. A milestone can have several entries, because real response runs in parallel and in loops. The report lists the milestones (first and last entry) and calculates the time between them (for example Occurred → Detected, Detected → Contained). See [Milestones and durations](#milestones-and-durations) for the exact rules.
+* **Guide templates (past, now, next)**: pick an incident type and fill in the blanks. Each question opens the entry form with the suggested category, phase and milestone already set. A milestone record bar and a short "next up" list show what has been recorded and what you could record next. See [Guide templates](#guide-templates).
 * **Edit, delete, sort and filter** timeline cards at any time.
 * **Markdown report** with key milestones and durations, a chronological timeline table, and one section per category. Unconfirmed notes get their own clearly labelled section. When a guide template is selected, the report also lists the items that are still open. Copy it or download it as `.md`.
 * **English or Japanese report**: choose the report language independently of the UI language. A report never mixes languages; your own entries are never translated.
@@ -55,7 +55,7 @@ Early in an incident most information is shaky. Record it as a **Context & Poten
 
 ### Milestones and durations
 
-A milestone is an optional tag on an entry. It does not change the entry's category or phase.
+A milestone is an optional tag on an entry. It does not change the entry's category or phase. Milestones record **when something happened**. They are not stages you must pass through in order: incident response runs in parallel, loops back and gets reopened, so the tool never blocks, reorders or warns about the order of your entries.
 
 | Milestone | Typical entry |
 |---|---|
@@ -66,14 +66,15 @@ A milestone is an optional tag on an entry. It does not change the entry's categ
 | Eradicated | Eradication is complete |
 | Recovered | Systems and services are back to normal |
 | Closed | The incident is formally closed |
+| Reopened | The incident was reopened after it was closed, or a closed stage turned out not to be finished |
 
 How the report calculates durations:
 
-* If several entries carry the same milestone, the **earliest** one is used.
+* A milestone can have several entries (parallel work, repeated rounds). The report shows the **first** and the **last** entry and how many there are. Durations run from the **first** record of the starting milestone, with one column to the first and one to the last record of the ending milestone, for example the time to the first containment and to full containment.
 * For the completion milestones (Contained, Eradicated, Recovered, Closed), an entry recorded as a **time range** counts at its **end** time. All other milestones use the start time.
 * Times are used exactly as entered. They are **assumed to share one timezone**; nothing is converted.
 * A milestone whose entry uses free-text time (for example `Nov 5 night`) only has an approximate timestamp. Intervals that involve it are marked *(estimated)*.
-* If two milestones are out of order, the interval is marked *check order* instead of showing a negative duration.
+* Intervals can overlap or even come out negative. The report shows the number and a neutral note that the work overlaps or ran in parallel; it never calls this an error.
 
 Durations are a reporting aid, not a performance target. Shortening a stage is not a goal in itself.
 
@@ -90,6 +91,9 @@ Pick an incident type in the Guide panel: *General first-response check*, *Suspe
 
 * **Record** opens the entry form with the category, phase and milestone suggested for that item. Saving links the new entry to the item.
 * **Unknown** opens a *Context & Potential Note* with the question filled in. When you later press **Confirm → Observed Event**, the item becomes Recorded.
+* **Milestone record bar**: the milestones appear as a row of steps. ✔ means at least one entry exists (with the first and last time and the number of entries) and ○ means nothing is recorded yet. If the incident was reopened after it was closed, *Closed* shows ↩. There is no required order and no warning about order. Click a step to add an entry; if the selected template has a matching item you have not recorded yet, the form opens linked to that item.
+* **Next up**: the first three items you have not started, in template order. The order is only a guide: nothing is held back, you can record things in any order, and **Later** sets an item aside for this session (press *Restore skipped* to bring them back).
+* **CSF labels**: hover over a code, or open "What the CSF labels mean", for a plain-language description.
 * The state is worked out from the timeline, so deleting a linked entry reopens the item.
 * Items that are not recorded yet appear in the report under *Open Items*, which is handy for a handover.
 * The small codes on each item (for example `RS.MI-01`) are reference labels from the NIST CSF 2.0 outcomes used in NIST SP 800-61r3. They are not a claim of compliance.
@@ -134,12 +138,12 @@ A `<meta>` CSP cannot set `frame-ancestors`. If you host the page yourself and n
 
 ## Data format
 
-**JSON (schema version 4)**
+**JSON (schema version 5)**
 
 ```json
 {
   "app": "incident-chronology-studio",
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "meta": { "title": "…", "commander": "…", "tz": "UTC+01:00" },
   "template": { "id": "malware", "na": { "c.lead": "Reason for not applicable" } },
   "items": [
@@ -163,11 +167,11 @@ A `<meta>` CSP cannot set `frame-ancestors`. If you host the page yourself and n
 * `category`: `OBSERVED_EVENT`, `DECISION`, `ACTION`, `COMMUNICATION` or `CONTEXT_NOTE`.
 * `timeMode`: `exact`, `range` or `text`. `time` (format `YYYY-MM-DDTHH:mm`) is always the sort anchor.
 * `phase`: `p0` to `p6`.
-* `milestone`: empty, or one of `occurred`, `detected`, `declared`, `contained`, `eradicated`, `recovered`, `closed`.
+* `milestone`: empty, or one of `occurred`, `detected`, `declared`, `contained`, `eradicated`, `recovered`, `closed`, `reopened`.
 * `slot`: empty, or the ID of the guide item the entry is linked to (for example `c.first`).
 * `template`: `id` is empty or one of `generic`, `malware`, `ransom`, `account`; `na` maps guide item IDs to the reason given for marking them not applicable.
 * Category-specific fields: `evidence` · `actor`, `rationale` · `assignee`, `artifact` · `recipient`, `channel` · `basis`, `verify`.
-* Files from earlier versions are still accepted: version 3 files have no `template` or `slot`, version 2 files also have no `milestone`, and version 1 files (`eventTime`, English phase names) are converted on import.
+* Files from earlier versions are still accepted: version 4 files simply have no `reopened` milestone, version 3 files have no `template` or `slot`, version 2 files also have no `milestone`, and version 1 files (`eventTime`, English phase names) are converted on import.
 
 **Markdown report**: header (title, commander, timezone, generation time in UTC), then `1. Key Milestones & Durations`, `2. Chronological Timeline`, `3. Confirmed Observed Events & IoCs`, `4. Context & Potential Notes (Unconfirmed)`, `5. Decisions`, `6. Response Actions`, `7. Stakeholder Communications`, and, when a guide template is selected, `8. Open Items (Guide Template)`. The report is written in the language chosen in the report language selector (English or Japanese), which follows the UI language by default.
 
@@ -177,7 +181,7 @@ A `<meta>` CSP cannot set `frame-ancestors`. If you host the page yourself and n
 
 This is a note-taking and reporting aid. It is **not** a case management system, a SIEM, or a replacement for your ticketing and evidence-handling procedures. It is a young project: expect rough edges, and review the generated report before you rely on it.
 
-The phase list and the milestones follow the general shape of common incident lifecycles (see the NIST SP 800-61 and ENISA incident management guidance) but are **not** a formal implementation of either. The guide templates are short question lists, not operating procedures, and the CSF labels on them are references only. Ideas under consideration include a milestone progress bar and "next three" suggestions, importing and exporting your own templates, more templates, a CSF coverage view, a Post-incident / lessons-learned phase, incident ID, severity and classification fields, and a Traffic Light Protocol marking for reports.
+The phase list and the milestones follow the general shape of common incident lifecycles (see the NIST SP 800-61 and ENISA incident management guidance) but are **not** a formal implementation of either. The guide templates are short question lists, not operating procedures, and the CSF labels on them are references only. Ideas under consideration include importing and exporting your own templates, more templates, a CSF coverage view, a Post-incident / lessons-learned phase, incident ID, severity and classification fields, and a Traffic Light Protocol marking for reports.
 
 ## Development
 
