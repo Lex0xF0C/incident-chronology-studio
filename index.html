@@ -4,10 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
-<link rel="icon" type="image/png" sizes="264x264" href="/assets/favicon_v4.png" />
 <title>Incident Chronology & Report Studio</title>
 <style>
-:root{--bg:#0f172a;--bg2:#1e293b;--bg3:#334155;--blue:#38bdf8;--green:#34d399;--amber:#fbbf24;--rose:#f43f5e;--purple:#c084fc;--text:#f8fafc;--muted:#94a3b8;--bd:#475569;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+:root{--bg:#0f172a;--bg2:#1e293b;--bg3:#334155;--blue:#38bdf8;--green:#34d399;--amber:#fbbf24;--rose:#f43f5e;--purple:#c084fc;--teal:#2dd4bf;--text:#f8fafc;--muted:#94a3b8;--bd:#475569;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 *{box-sizing:border-box;margin:0;padding:0}
 [hidden]{display:none!important}
 body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans JP",sans-serif;line-height:1.5;padding:1rem}
@@ -19,6 +18,7 @@ h1{font-size:1.2rem;display:flex;flex-wrap:wrap;align-items:center;gap:.5rem}
 .btn-header{background:transparent;color:var(--muted);padding:.4rem .8rem;font-size:.85rem}
 .btn-secondary{padding:.35rem .75rem;font-size:.8rem}
 .btn-xs{font-size:.75rem;padding:.2rem .5rem;background:var(--bg2)}
+.btn-xs.promote{color:var(--teal);border-color:var(--teal)}
 .btn-header:hover,.btn-secondary:hover,.btn-xs:hover{border-color:var(--blue);color:var(--text)}
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
 .app{display:grid;grid-template-columns:1fr;gap:1.5rem}
@@ -36,6 +36,8 @@ textarea{resize:vertical;min-height:70px}
 .cat-btn.active[data-cat=DECISION]{background:rgba(192,132,252,.2);color:var(--purple);border-color:var(--purple)}
 .cat-btn.active[data-cat=ACTION]{background:rgba(52,211,153,.2);color:var(--green);border-color:var(--green)}
 .cat-btn.active[data-cat=COMMUNICATION]{background:rgba(251,191,36,.2);color:var(--amber);border-color:var(--amber)}
+.cat-btn[data-cat=CONTEXT_NOTE]{grid-column:1/-1}
+.cat-btn.active[data-cat=CONTEXT_NOTE]{background:rgba(45,212,191,.15);color:var(--teal);border-color:var(--teal)}
 .dyn{display:none;flex-direction:column;gap:.85rem;background:rgba(0,0,0,.15);padding:.75rem;border-radius:.375rem;border:1px dashed var(--bd)}
 .dyn.active{display:flex}
 .btn-submit{background:var(--blue);color:#0f172a;font-weight:700;border:none;padding:.65rem;border-radius:.375rem;cursor:pointer;font-size:.9rem;flex:1}
@@ -46,10 +48,10 @@ textarea{resize:vertical;min-height:70px}
 .chip.active{background:var(--bg3);color:var(--text);border-color:var(--blue)}
 .tl{display:flex;flex-direction:column;gap:.75rem;max-height:550px;overflow-y:auto;padding-right:.25rem}
 .card{background:var(--bg);border:1px solid var(--bd);border-left:4px solid var(--bd);border-radius:.375rem;padding:.85rem;display:flex;flex-direction:column;gap:.5rem}
-.card.cat-OBSERVED_EVENT{border-left-color:var(--blue)}.card.cat-DECISION{border-left-color:var(--purple)}.card.cat-ACTION{border-left-color:var(--green)}.card.cat-COMMUNICATION{border-left-color:var(--amber)}
+.card.cat-OBSERVED_EVENT{border-left-color:var(--blue)}.card.cat-DECISION{border-left-color:var(--purple)}.card.cat-ACTION{border-left-color:var(--green)}.card.cat-COMMUNICATION{border-left-color:var(--amber)}.card.cat-CONTEXT_NOTE{border-left-color:var(--teal);border-left-style:dashed}
 .ch{display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;flex-wrap:wrap}
 .tag{font-size:.7rem;font-weight:700;padding:.1rem .4rem;border-radius:.25rem;margin-right:.35rem}
-.tag-event{background:rgba(56,189,248,.15);color:var(--blue)}.tag-decision{background:rgba(192,132,252,.15);color:var(--purple)}.tag-action{background:rgba(52,211,153,.15);color:var(--green)}.tag-comm{background:rgba(251,191,36,.15);color:var(--amber)}.tag-phase{background:var(--bg3);color:var(--muted)}
+.tag-event{background:rgba(56,189,248,.15);color:var(--blue)}.tag-decision{background:rgba(192,132,252,.15);color:var(--purple)}.tag-action{background:rgba(52,211,153,.15);color:var(--green)}.tag-comm{background:rgba(251,191,36,.15);color:var(--amber)}.tag-note{background:rgba(45,212,191,.15);color:var(--teal)}.tag-phase{background:var(--bg3);color:var(--muted)}
 .ct{font-family:var(--mono);font-size:.8rem;color:var(--amber);font-weight:600}.ct small{color:var(--muted);font-weight:400}
 .cb{font-size:.9rem;white-space:pre-wrap;overflow-wrap:anywhere}
 .cm{font-size:.75rem;color:var(--muted);background:rgba(255,255,255,.03);padding:.4rem;border-radius:.25rem;display:flex;flex-direction:column;gap:.25rem;overflow-wrap:anywhere}
@@ -84,6 +86,7 @@ textarea{resize:vertical;min-height:70px}
       <button type="button" class="cat-btn" data-cat="DECISION" data-i18n="cat.decision"></button>
       <button type="button" class="cat-btn" data-cat="ACTION" data-i18n="cat.action"></button>
       <button type="button" class="cat-btn" data-cat="COMMUNICATION" data-i18n="cat.comm"></button>
+      <button type="button" class="cat-btn" data-cat="CONTEXT_NOTE" data-i18n="cat.note"></button>
     </div>
   </div>
 
@@ -118,6 +121,10 @@ textarea{resize:vertical;min-height:70px}
   <div class="dyn" id="secComm">
     <div class="fg"><label for="commRecipient" data-i18n="form.recipientLabel"></label><input type="text" id="commRecipient" data-i18n-ph="form.recipientPh"></div>
     <div class="fg"><label for="commChannel" data-i18n="form.channelLabel"></label><input type="text" id="commChannel" data-i18n-ph="form.channelPh"></div>
+  </div>
+  <div class="dyn" id="secNote">
+    <div class="fg"><label for="noteBasis" data-i18n="form.basisLabel"></label><input type="text" id="noteBasis" data-i18n-ph="form.basisPh"></div>
+    <div class="fg"><label for="noteVerify" data-i18n="form.verifyLabel"></label><input type="text" id="noteVerify" data-i18n-ph="form.verifyPh"></div>
   </div>
 
   <div class="fg">
@@ -160,6 +167,7 @@ textarea{resize:vertical;min-height:70px}
       <button class="chip" data-filter="DECISION" data-i18n="filter.dec"></button>
       <button class="chip" data-filter="ACTION" data-i18n="filter.act"></button>
       <button class="chip" data-filter="COMMUNICATION" data-i18n="filter.comm"></button>
+      <button class="chip" data-filter="CONTEXT_NOTE" data-i18n="filter.note"></button>
     </div>
     <div class="tl" id="timelineList"></div>
   </div>
@@ -210,7 +218,12 @@ en:{
 "meta.title":"Incident Overview","meta.nameLabel":"Incident Title","meta.commanderLabel":"Lead Responder / Commander","meta.commanderPh":"e.g. John Doe","meta.tzLabel":"Timezone of recorded times",
 "timeline.title":"Timeline Cards","timeline.sortBtn":"Sort (Oldest/Newest)","timeline.exportBtn":"Save JSON","timeline.importBtn":"Load JSON","timeline.filterLabel":"Filter:",
 "filter.all":"Show All","filter.observed":"💻 Event","filter.dec":"🧠 Decisions","filter.act":"🛠️ Actions","filter.comm":"📢 Comms",
-"btn.edit":"Edit","btn.delete":"Delete",
+"btn.edit":"Edit","btn.delete":"Delete","btn.promote":"Confirm → Observed Event",
+"cat.note":"❓ Context & Potential Note","filter.note":"❓ Notes",
+"form.basisLabel":"Basis / Source (why you suspect this)","form.basisPh":"e.g. Similar to last month's campaign; unverified report",
+"form.verifyLabel":"To verify (what would confirm or rule it out?)","form.verifyPh":"e.g. Compare hash with IoC feed",
+"c.basis":"Basis","c.verify":"To verify",
+"msg.promote":"Add the confirming evidence, then save. Cancel keeps it as a note.",
 "timeline.sampleBtn":"📂 Load sample","timeline.clearBtn":"Clear all",
 "empty.text":"No entries yet. Add a note on the left, or load a sample incident to see how it works.",
 "msg.confirmSample":"Replace the current {n} entries with the sample incident?","msg.confirmClear":"Delete all {n} entries? (Save JSON first if you need them.)","msg.sampleLoaded":"Sample loaded. Everything here is fictional.",
@@ -218,7 +231,7 @@ en:{
 "msg.empty":"Please enter a timestamp and an event summary.","msg.confirmDel":"Delete this entry?","msg.confirmReplace":"Replace the current {n} entries with the loaded file?",
 "msg.copied":"Markdown copied to clipboard.","msg.copyFail":"Copy failed. Use Download .md instead.","msg.loaded":"JSON loaded.","msg.badJson":"Failed to load JSON (invalid format).",
 "guide.title":"💡 Whiteboard Tips for Responders",
-"guide.sec1Title":"1. Keep Facts and Guesses Separate","guide.sec1Body":"Log evidence (Observed Event) is a hard Fact. Working ideas (\"Is this C2?\") are Decisions or notes. Keep them distinct so team members don't jump to conclusions.",
+"guide.sec1Title":"1. Keep Facts and Guesses Separate","guide.sec1Body":"Log evidence (Observed Event) is a hard Fact. Working ideas (\"Is this C2?\") are Decisions or notes. Keep them distinct so team members don't jump to conclusions. Not sure yet? Park it in \"Context & Potential Note\", then use \"Confirm → Observed Event\" once it is verified.",
 "guide.sec2Title":"2. Retroactive Attack Events","guide.sec2Body":"If log analysis reveals an attack started days ago, log it under Phase \"0. Occurrence / Latency\" so your timeline accurately reflects when the attacker first got in.",
 "guide.sec3Title":"3. Privacy First (Zero Leaks)","guide.sec3Body":"Everything stays inside your browser's memory. Nothing is stored or sent anywhere, so Save JSON before closing the tab; you will be warned if there are unsaved entries."
 },
@@ -243,7 +256,12 @@ ja:{
 "meta.title":"インシデント基本情報","meta.nameLabel":"インシデント名","meta.commanderLabel":"対応責任者 (Commander)","meta.commanderPh":"例: セキュリティ太郎","meta.tzLabel":"記録する時刻のタイムゾーン",
 "timeline.title":"タイムラインカード","timeline.sortBtn":"昇順/降順 切り替え","timeline.exportBtn":"JSON保存","timeline.importBtn":"JSON読込","timeline.filterLabel":"フィルタ:",
 "filter.all":"すべて表示","filter.observed":"💻 観測事象","filter.dec":"🧠 意思決定","filter.act":"🛠️ 対応","filter.comm":"📢 連絡",
-"btn.edit":"編集","btn.delete":"削除",
+"btn.edit":"編集","btn.delete":"削除","btn.promote":"確定 → 観測事象",
+"cat.note":"❓ 補足・可能性メモ (Context & Potential)","filter.note":"❓ メモ",
+"form.basisLabel":"根拠・情報源（なぜそう考えたか）","form.basisPh":"例: 先月の事案と手口が類似／未確認の報告",
+"form.verifyLabel":"確認すべきこと（何で確定・否定できるか）","form.verifyPh":"例: ハッシュをIoCフィードと照合",
+"c.basis":"根拠","c.verify":"要確認",
+"msg.promote":"確認できた証拠を追記して保存してください。キャンセルするとメモのままです。",
 "timeline.sampleBtn":"📂 サンプルを読み込む","timeline.clearBtn":"全消去",
 "empty.text":"まだエントリーがありません。左のフォームからメモを追加するか、サンプルの事例を読み込んで使い方を確認できます。",
 "msg.confirmSample":"現在の {n} 件を、サンプル事例で置き換えますか？","msg.confirmClear":"{n} 件すべてを削除しますか？（必要なら先にJSON保存してください）","msg.sampleLoaded":"サンプルを読み込みました。内容はすべて架空です。",
@@ -251,18 +269,18 @@ ja:{
 "msg.empty":"日時と概要を入力してください。","msg.confirmDel":"このエントリーを削除しますか？","msg.confirmReplace":"現在の {n} 件を、読み込んだファイルの内容で置き換えますか？",
 "msg.copied":"Markdownをコピーしました。","msg.copyFail":"コピーに失敗しました。.md保存をご利用ください。","msg.loaded":"JSONを読み込みました。","msg.badJson":"JSONの読み込みに失敗しました（形式が不正です）。",
 "guide.title":"💡 ホワイトボード感覚で使える記録のコツ",
-"guide.sec1Title":"1. 事実と見立て（推測）を分ける","guide.sec1Body":"ログで確認できた事実（観測事象）と、分析中の見立て（意思決定）を区別して残すと、後からチーム内で混乱しません。",
+"guide.sec1Title":"1. 事実と見立て（推測）を分ける","guide.sec1Body":"ログで確認できた事実（観測事象）と、分析中の見立て（意思決定）を区別して残すと、後からチーム内で混乱しません。確証のない情報は「補足・可能性メモ」に仮置きし、確定したら「確定 → 観測事象」で移しましょう。",
 "guide.sec2Title":"2. 発覚より前の出来事は「発生・潜伏」に","guide.sec2Body":"ログ調査で「実は数日前に侵入されていた」と判明した過去の痕跡は、フェーズ「0. 発生・潜伏」を選ぶと時間軸が綺麗に繋がります。",
 "guide.sec3Title":"3. 完全ローカルで安全","guide.sec3Body":"入力したデータはブラウザのメモリ内だけに存在し、どこにも保存・送信されません。タブを閉じる前にJSON保存してください（未保存のエントリーがある場合は警告します）。"
 }};
 
 const $=id=>document.getElementById(id);
-const CATS=['OBSERVED_EVENT','DECISION','ACTION','COMMUNICATION'];
-const FIELDS={OBSERVED_EVENT:['evidence'],DECISION:['actor','rationale'],ACTION:['assignee','artifact'],COMMUNICATION:['recipient','channel']};
-const IDF={evidence:'eventEvidence',actor:'decActor',rationale:'decRationale',assignee:'actAssignee',artifact:'actArtifact',recipient:'commRecipient',channel:'commChannel'};
-const SEC={OBSERVED_EVENT:'secObservedEvent',DECISION:'secDecision',ACTION:'secAction',COMMUNICATION:'secComm'};
-const CATKEY={OBSERVED_EVENT:'cat.observedEvent',DECISION:'cat.decision',ACTION:'cat.action',COMMUNICATION:'cat.comm'};
-const CLS={OBSERVED_EVENT:'event',DECISION:'decision',ACTION:'action',COMMUNICATION:'comm'};
+const CATS=['OBSERVED_EVENT','DECISION','ACTION','COMMUNICATION','CONTEXT_NOTE'];
+const FIELDS={OBSERVED_EVENT:['evidence'],DECISION:['actor','rationale'],ACTION:['assignee','artifact'],COMMUNICATION:['recipient','channel'],CONTEXT_NOTE:['basis','verify']};
+const IDF={evidence:'eventEvidence',actor:'decActor',rationale:'decRationale',assignee:'actAssignee',artifact:'actArtifact',recipient:'commRecipient',channel:'commChannel',basis:'noteBasis',verify:'noteVerify'};
+const SEC={OBSERVED_EVENT:'secObservedEvent',DECISION:'secDecision',ACTION:'secAction',COMMUNICATION:'secComm',CONTEXT_NOTE:'secNote'};
+const CATKEY={OBSERVED_EVENT:'cat.observedEvent',DECISION:'cat.decision',ACTION:'cat.action',COMMUNICATION:'cat.comm',CONTEXT_NOTE:'cat.note'};
+const CLS={OBSERVED_EVENT:'event',DECISION:'decision',ACTION:'action',COMMUNICATION:'comm',CONTEXT_NOTE:'note'};
 const PH=['p0','p1','p2','p3','p4','p5','p6'];
 const MODES=['exact','range','text'];
 const TRE=/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
@@ -313,6 +331,10 @@ function startEdit(id){
   Object.keys(IDF).forEach(f=>$(IDF[f]).value=FIELDS[it.category].includes(f)?(it[f]||''):'');
   $('cancelEdit').hidden=false;setAddLabel();$('summary').focus();window.scrollTo({top:0,behavior:'smooth'});
 }
+function promote(id){
+  const it=state.items.find(i=>i.id===id);if(!it)return;
+  startEdit(id);setCat('OBSERVED_EVENT');$('eventEvidence').value=it.basis||'';toast(t('msg.promote'));
+}
 $('cancelEdit').addEventListener('click',()=>{endEdit();clearForm()});
 $('addBtn').addEventListener('click',()=>{
   const it={category:state.category,timeMode:$('timeMode').value,time:$('eventTime').value,timeEnd:$('timeEnd').value,timeText:$('timeText').value.trim(),phase:$('phase').value,summary:$('summary').value.trim()};
@@ -329,6 +351,7 @@ $('timelineList').addEventListener('click',e=>{
   const b=e.target.closest('button[data-act]');if(!b)return;
   const id=b.dataset.id;
   if(b.dataset.act==='edit')startEdit(id);
+  else if(b.dataset.act==='promote')promote(id);
   else if(b.dataset.act==='sample')loadSample();
   else if(b.dataset.act==='del'&&confirm(t('msg.confirmDel'))){
     if(state.editId===id){endEdit();clearForm()}
@@ -359,7 +382,7 @@ function render(){
     return '<div class="card cat-'+i.category+'"><div class="ch"><div><span class="tag tag-'+CLS[i.category]+'">'+esc(t(CATKEY[i.category]))+'</span><span class="tag tag-phase">'+esc(t('ph.'+i.phase))+'</span></div>'
       +'<div class="ct">⏱️ '+esc(fmtT(i))+anchor+'</div></div><div class="cb">'+esc(i.summary)+'</div>'
       +(meta?'<div class="cm">'+meta+'</div>':'')
-      +'<div class="ca"><button class="btn-xs" data-act="edit" data-id="'+esc(i.id)+'">'+esc(t('btn.edit'))+'</button><button class="btn-xs" data-act="del" data-id="'+esc(i.id)+'">'+esc(t('btn.delete'))+'</button></div></div>';
+      +'<div class="ca">'+(i.category==='CONTEXT_NOTE'?'<button class="btn-xs promote" data-act="promote" data-id="'+esc(i.id)+'">'+esc(t('btn.promote'))+'</button>':'')+'<button class="btn-xs" data-act="edit" data-id="'+esc(i.id)+'">'+esc(t('btn.edit'))+'</button><button class="btn-xs" data-act="del" data-id="'+esc(i.id)+'">'+esc(t('btn.delete'))+'</button></div></div>';
   }).join('');
   generateMarkdown();
 }
@@ -380,7 +403,7 @@ function generateMarkdown(){
     const f=FIELDS[cat];
     return '## '+n+'. '+title+'\n\n'+tbl(['Time','Phase','Summary',...f.map(x=>en('c.'+x))],L.filter(i=>i.category===cat).map(i=>[fmtT(i),en('ph.'+i.phase),i.summary,...f.map(x=>i[x])]));
   };
-  md+=sec(2,'Confirmed Observed Events & IoCs','OBSERVED_EVENT')+sec(3,'Decisions & Investigation Attribution Log','DECISION')+sec(4,'Response Actions & Milestones','ACTION')+sec(5,'Stakeholder Communications History','COMMUNICATION');
+  md+=sec(2,'Confirmed Observed Events & IoCs','OBSERVED_EVENT')+sec(3,'Context & Potential Notes (Unconfirmed)','CONTEXT_NOTE')+sec(4,'Decisions & Investigation Attribution Log','DECISION')+sec(5,'Response Actions & Milestones','ACTION')+sec(6,'Stakeholder Communications History','COMMUNICATION');
   md+='---\n*Generated by Incident Chronology Studio (Client-Side Only)*\n';
   lastMd=md;$('markdownOutput').textContent=md;
 }
@@ -451,7 +474,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.con
 window.addEventListener('beforeunload',e=>{if(state.dirty&&state.items.length){e.preventDefault();e.returnValue=''}});
 
 /* ---------- sample incidents (fictional) ---------- */
-const CM={E:'OBSERVED_EVENT',D:'DECISION',A:'ACTION',C:'COMMUNICATION'};
+const CM={E:'OBSERVED_EVENT',D:'DECISION',A:'ACTION',C:'COMMUNICATION',N:'CONTEXT_NOTE'};
 const S=(c,time,phase,summary,f1,f2,mode,x)=>{const category=CM[c],fl=FIELDS[category],o={category,time,phase,summary,timeMode:mode||'exact',timeEnd:mode==='range'?x:'',timeText:mode==='text'?x:''};o[fl[0]]=f1;if(fl[1])o[fl[1]]=f2;return o};
 const SAMPLES={
 en:{meta:{title:"SAMPLE-Malware-Infection-Handling",commander:"Alex Example",tz:"UTC+01:00"},items:[
@@ -462,6 +485,7 @@ S('D','2026-11-05T09:25','p2',"Treat as confirmed malware infection. Declare inc
 S('C','2026-11-05T09:40','p6',"Incident declared; CISO and IT helpdesk notified.","CISO, IT Helpdesk","Phone + Slack #ir-war-room"),
 S('A','2026-11-05T09:55','p3',"Network-isolated FIN-PC-014 via EDR.","Responder B","Host isolated, user informed"),
 S('A','2026-11-05T10:30','p4',"Acquired memory image and triage disk collection.","Responder B","mem.raw, triage zip; hashes recorded","range","2026-11-05T11:30"),
+S('N','2026-11-05T10:50','p2',"Other Finance hosts may be beaconing too (unconfirmed).","Same phishing mail went to 6 Finance mailboxes","Search proxy logs for 198.51.100.23"),
 S('E','2026-11-05T11:10','p2',"Same beacon pattern found on FIN-PC-021 in proxy logs (lateral spread suspected).","Proxy log, 2 hits since 07:50"),
 S('D','2026-11-05T11:20','p2',"Expand scope to the Finance VLAN and hunt for IoCs on all hosts.","Incident Commander","Second host with identical C2 traffic"),
 S('A','2026-11-05T13:00','p5',"Reimaged both hosts; reset affected user passwords.","IT Operations","Rebuilt from golden image","range","2026-11-05T16:30"),
@@ -470,6 +494,7 @@ S('D','2026-11-06T10:00','p5',"Close incident after 24h of clean monitoring; sch
 ja:{meta:{title:"サンプル-ランサムウェア疑い対応",commander:"セキュリティ太郎",tz:"UTC+09:00"},items:[
 S('E','2026-11-06T03:10','p0',"VPN機器に海外IPから大量のログイン試行（後日ログ調査で判明）。","VPNログ 203.0.113.45 から失敗約1,200件",'',"text","11/6 未明（推定）"),
 S('E','2026-11-07T08:30','p1',"ファイルサーバの共有フォルダで拡張子が一括変更されているとの報告。","ヘルプデスク受付 #20261107-003"),
+S('N','2026-11-07T08:40','p2',"VPN経由の侵入が原因の可能性（未確認）。","同時期にVPNへの大量ログイン試行ログがある","VPN認証成功ログと侵入時刻を照合"),
 S('D','2026-11-07T08:50','p2',"ランサムウェア感染の疑いとして緊急対応を開始。","情シス課長","ランサムノート(README.txt)の存在を確認"),
 S('A','2026-11-07T09:05','p3',"ファイルサーバをネットワークから切断（電源は落とさない）。","インフラ担当","LAN切断、メモリ保全のため電源維持"),
 S('C','2026-11-07T09:30','p6',"経営陣・法務へ一報。個人情報流出の可能性を共有。","経営陣, 法務","電話・暗号化メール"),
