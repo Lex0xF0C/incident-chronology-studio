@@ -8,7 +8,7 @@
   <img src="assets/screen.png" alt="Screenshot of Incident Chronology Studio" width="720">
 </p>
 
-Incident Chronology Studio is a single HTML file that helps SOC analysts, CSIRT members and incident commanders keep a clean timeline while an incident is still unfolding. It separates **facts**, **decisions**, **actions**, **communications** and **unconfirmed possibilities**, and turns them into a structured report (Markdown or CSV, in English or Japanese) when you are done.
+Incident Chronology Studio is a single HTML file that helps SOC analysts, CSIRT members and incident commanders keep a clean timeline while an incident is still unfolding. It separates **facts**, **decisions**, **actions**, **communications** and **unconfirmed possibilities**, and turns them into a structured report (Markdown or CSV, in English or Japanese) when you are done. For people new to incident response, guide templates ask what happened, what is being done and what comes next, so the gaps are easy to see.
 
 Everything runs inside your browser tab. Nothing is sent anywhere, and nothing is written to the browser's storage.
 
@@ -39,10 +39,11 @@ This tool keeps those answers in one place, with as little friction as a whitebo
 * **Flexible time input**: exact timestamp, a start → end range, or free text such as `Nov 5 night` for retroactive findings. A timestamp is always kept as the sort anchor. A timezone field is recorded in the report.
 * **Incident phases (0–6)**: Occurrence / Latency (pre-detection), Detection, Triage, Containment, Forensics, Eradication / Recovery, Communication.
 * **Milestones and durations**: optionally tag any entry as *Occurred*, *Detected*, *Declared*, *Contained*, *Eradicated*, *Recovered* or *Closed*. The report lists the milestones and calculates the time between them (for example Occurred → Detected, Detected → Contained). See [Milestones and durations](#milestones-and-durations) for the exact rules.
+* **Guide templates (past, now, next)**: pick an incident type and fill in the blanks. Each question opens the entry form with the suggested category, phase and milestone already set. See [Guide templates](#guide-templates).
 * **Edit, delete, sort and filter** timeline cards at any time.
-* **Markdown report** with key milestones and durations, a chronological timeline table, and one section per category. Unconfirmed notes get their own clearly labelled section. Copy it or download it as `.md`.
+* **Markdown report** with key milestones and durations, a chronological timeline table, and one section per category. Unconfirmed notes get their own clearly labelled section. When a guide template is selected, the report also lists the items that are still open. Copy it or download it as `.md`.
 * **English or Japanese report**: choose the report language independently of the UI language. A report never mixes languages; your own entries are never translated.
-* **CSV export** (UTF-8 with BOM, so Excel opens Japanese text correctly). One row per entry, with the time, end time, phase, milestone, summary and every category-specific field in its own column.
+* **CSV export** (UTF-8 with BOM, so Excel opens Japanese text correctly). One row per entry, with the time, end time, phase, milestone, linked guide item, summary and every category-specific field in its own column.
 * **JSON save / load** to continue later or hand over to the next shift.
 * **Built-in sample incidents** (English and Japanese) so you can see how it works in one click.
 * **English and Japanese UI**, switchable at runtime.
@@ -76,6 +77,24 @@ How the report calculates durations:
 
 Durations are a reporting aid, not a performance target. Shortening a stage is not a goal in itself.
 
+### Guide templates
+
+Pick an incident type in the Guide panel: *General first-response check*, *Suspected malware infection (endpoint)*, *Suspected ransomware* or *Account takeover / phishing*. The questions are grouped in three columns: **Past** (what happened), **Now** (what is being done) and **Next** (what comes next). Every item shows a short hint, which you can hide.
+
+| State | Meaning |
+|---|---|
+| ✅ Recorded | At least one timeline entry other than an unconfirmed note is linked to the item |
+| ❓ Unknown | Only an unconfirmed note is linked to the item |
+| ➖ Not applicable | You marked it, optionally with a reason |
+| ⬜ To do | Nothing recorded yet |
+
+* **Record** opens the entry form with the category, phase and milestone suggested for that item. Saving links the new entry to the item.
+* **Unknown** opens a *Context & Potential Note* with the question filled in. When you later press **Confirm → Observed Event**, the item becomes Recorded.
+* The state is worked out from the timeline, so deleting a linked entry reopens the item.
+* Items that are not recorded yet appear in the report under *Open Items*, which is handy for a handover.
+* The small codes on each item (for example `RS.MI-01`) are reference labels from the NIST CSF 2.0 outcomes used in NIST SP 800-61r3. They are not a claim of compliance.
+* The templates are short question lists, **not** operating procedures. Follow your organisation's own procedures. They contain no legal deadlines on purpose: check the latest laws and contracts for notification duties.
+
 ## Quick start
 
 No build tools, no dependencies, no server.
@@ -98,7 +117,7 @@ The core promise: **incident data never leaves your machine, and never lingers o
 | No persistent browser storage | No `localStorage`, `sessionStorage`, `IndexedDB` or cookies. Closing or reloading the tab discards all unsaved data, so hostnames, IPs and IoCs do not remain on the workstation. |
 | User-controlled export | Data leaves the page only when you click Save JSON, Copy Markdown, Download .md or Download .csv. |
 | XSS defence | Every user-supplied value is HTML-escaped before it reaches the DOM. No `eval`, no `new Function`, no inline event handlers. |
-| Safe JSON import | Imported files are parsed with `JSON.parse` only. Categories, phases, milestones and timestamps are validated against allow-lists, strings are length-limited, unknown entries are dropped and IDs are regenerated. |
+| Safe JSON import | Imported files are parsed with `JSON.parse` only. Categories, phases, milestones, guide item IDs, the template ID and timestamps are validated against allow-lists, strings are length-limited, unknown entries are dropped and IDs are regenerated. |
 | Spreadsheet-safe CSV | Cells that begin with `=`, `+`, `-`, `@`, a tab or a carriage return get a leading `'`, so a spreadsheet does not run them as formulas. |
 
 ### Limits of this design
@@ -115,13 +134,14 @@ A `<meta>` CSP cannot set `frame-ancestors`. If you host the page yourself and n
 
 ## Data format
 
-**JSON (schema version 3)**
+**JSON (schema version 4)**
 
 ```json
 {
   "app": "incident-chronology-studio",
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "meta": { "title": "…", "commander": "…", "tz": "UTC+01:00" },
+  "template": { "id": "malware", "na": { "c.lead": "Reason for not applicable" } },
   "items": [
     {
       "id": "…",
@@ -132,6 +152,7 @@ A `<meta>` CSP cannot set `frame-ancestors`. If you host the page yourself and n
       "timeText": "",
       "phase": "p1",
       "milestone": "detected",
+      "slot": "c.first",
       "summary": "EDR alert: suspicious beaconing from FIN-PC-014.",
       "evidence": "EDR alert #48213"
     }
@@ -143,18 +164,20 @@ A `<meta>` CSP cannot set `frame-ancestors`. If you host the page yourself and n
 * `timeMode`: `exact`, `range` or `text`. `time` (format `YYYY-MM-DDTHH:mm`) is always the sort anchor.
 * `phase`: `p0` to `p6`.
 * `milestone`: empty, or one of `occurred`, `detected`, `declared`, `contained`, `eradicated`, `recovered`, `closed`.
+* `slot`: empty, or the ID of the guide item the entry is linked to (for example `c.first`).
+* `template`: `id` is empty or one of `generic`, `malware`, `ransom`, `account`; `na` maps guide item IDs to the reason given for marking them not applicable.
 * Category-specific fields: `evidence` · `actor`, `rationale` · `assignee`, `artifact` · `recipient`, `channel` · `basis`, `verify`.
-* Files from earlier versions are still accepted: schema version 2 files simply have no `milestone`, and version 1 files (`eventTime`, English phase names) are converted on import.
+* Files from earlier versions are still accepted: version 3 files have no `template` or `slot`, version 2 files also have no `milestone`, and version 1 files (`eventTime`, English phase names) are converted on import.
 
-**Markdown report**: header (title, commander, timezone, generation time in UTC), then `1. Key Milestones & Durations`, `2. Chronological Timeline`, `3. Confirmed Observed Events & IoCs`, `4. Context & Potential Notes (Unconfirmed)`, `5. Decisions`, `6. Response Actions`, `7. Stakeholder Communications`. The report is written in the language chosen in the report language selector (English or Japanese), which follows the UI language by default.
+**Markdown report**: header (title, commander, timezone, generation time in UTC), then `1. Key Milestones & Durations`, `2. Chronological Timeline`, `3. Confirmed Observed Events & IoCs`, `4. Context & Potential Notes (Unconfirmed)`, `5. Decisions`, `6. Response Actions`, `7. Stakeholder Communications`, and, when a guide template is selected, `8. Open Items (Guide Template)`. The report is written in the language chosen in the report language selector (English or Japanese), which follows the UI language by default.
 
-**CSV**: one header row and one row per entry, sorted by time. Columns: time, end time, time description, type, phase, milestone, summary, then one column for each category-specific field (empty where a field does not apply to the entry's category). The header text follows the report language.
+**CSV**: one header row and one row per entry, sorted by time. Columns: time, end time, time description, type, phase, milestone, guide item, summary, then one column for each category-specific field (empty where a field does not apply to the entry's category). The header text follows the report language.
 
 ## Scope and status
 
 This is a note-taking and reporting aid. It is **not** a case management system, a SIEM, or a replacement for your ticketing and evidence-handling procedures. It is a young project: expect rough edges, and review the generated report before you rely on it.
 
-The phase list and the milestones follow the general shape of common incident lifecycles (see the NIST SP 800-61 and ENISA incident management guidance) but are **not** a formal implementation of either. Ideas under consideration include a Post-incident / lessons-learned phase, NIST CSF 2.0 function tags, incident ID, severity and classification fields, and a Traffic Light Protocol marking for reports.
+The phase list and the milestones follow the general shape of common incident lifecycles (see the NIST SP 800-61 and ENISA incident management guidance) but are **not** a formal implementation of either. The guide templates are short question lists, not operating procedures, and the CSF labels on them are references only. Ideas under consideration include a milestone progress bar and "next three" suggestions, importing and exporting your own templates, more templates, a CSF coverage view, a Post-incident / lessons-learned phase, incident ID, severity and classification fields, and a Traffic Light Protocol marking for reports.
 
 ## Development
 
