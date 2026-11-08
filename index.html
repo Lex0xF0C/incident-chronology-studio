@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
-<title>Incident Chronology & Report Studio</title>
+<title>Incident Chronology Studio</title>
 <style>
 :root{--bg:#0f172a;--bg2:#1e293b;--bg3:#334155;--blue:#38bdf8;--green:#34d399;--amber:#fbbf24;--rose:#f43f5e;--purple:#c084fc;--teal:#2dd4bf;--text:#f8fafc;--muted:#94a3b8;--bd:#475569;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -44,6 +44,8 @@ textarea{resize:vertical;min-height:70px}
 .btn-submit:hover{opacity:.9}
 .tc{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:.75rem}
 .ab,.chips{display:flex;gap:.35rem;flex-wrap:wrap}
+.ab{align-items:center}
+.ab select{width:auto;padding:.3rem .5rem;font-size:.8rem}
 .chip{font-size:.75rem;padding:.2rem .5rem;border-radius:.25rem;border:1px solid var(--bd);background:var(--bg);color:var(--muted);cursor:pointer}
 .chip.active{background:var(--bg3);color:var(--text);border-color:var(--blue)}
 .tl{display:flex;flex-direction:column;gap:.75rem;max-height:550px;overflow-y:auto;padding-right:.25rem}
@@ -52,6 +54,7 @@ textarea{resize:vertical;min-height:70px}
 .ch{display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;flex-wrap:wrap}
 .tag{font-size:.7rem;font-weight:700;padding:.1rem .4rem;border-radius:.25rem;margin-right:.35rem}
 .tag-event{background:rgba(56,189,248,.15);color:var(--blue)}.tag-decision{background:rgba(192,132,252,.15);color:var(--purple)}.tag-action{background:rgba(52,211,153,.15);color:var(--green)}.tag-comm{background:rgba(251,191,36,.15);color:var(--amber)}.tag-note{background:rgba(45,212,191,.15);color:var(--teal)}.tag-phase{background:var(--bg3);color:var(--muted)}
+.tag-ms{background:transparent;color:var(--amber);border:1px solid var(--amber)}
 .ct{font-family:var(--mono);font-size:.8rem;color:var(--amber);font-weight:600}.ct small{color:var(--muted);font-weight:400}
 .cb{font-size:.9rem;white-space:pre-wrap;overflow-wrap:anywhere}
 .cm{font-size:.75rem;color:var(--muted);background:rgba(255,255,255,.03);padding:.4rem;border-radius:.25rem;display:flex;flex-direction:column;gap:.25rem;overflow-wrap:anywhere}
@@ -105,6 +108,11 @@ textarea{resize:vertical;min-height:70px}
   <div class="fg">
     <label for="phase" data-i18n="form.phaseLabel"></label>
     <select id="phase"></select>
+  </div>
+
+  <div class="fg">
+    <label for="milestone" data-i18n="form.milestoneLabel"></label>
+    <select id="milestone"></select>
   </div>
 
   <div class="dyn active" id="secObservedEvent">
@@ -176,8 +184,11 @@ textarea{resize:vertical;min-height:70px}
     <div class="tc">
       <h2 class="panel-title" style="border:none;padding:0" data-i18n="report.title"></h2>
       <div class="ab">
+        <label for="reportLang" data-i18n="report.langLabel"></label>
+        <select id="reportLang"><option value="en">English</option><option value="ja">日本語</option></select>
         <button class="btn-secondary" id="copyMdBtn" data-i18n="report.copyBtn"></button>
         <button class="btn-secondary" id="dlMdBtn" data-i18n="report.dlBtn"></button>
+        <button class="btn-secondary" id="dlCsvBtn" data-i18n="report.csvBtn"></button>
       </div>
     </div>
     <div class="md" id="markdownOutput" tabindex="0"></div>
@@ -233,7 +244,16 @@ en:{
 "guide.title":"💡 Whiteboard Tips for Responders",
 "guide.sec1Title":"1. Keep Facts and Guesses Separate","guide.sec1Body":"Log evidence (Observed Event) is a hard Fact. Working ideas (\"Is this C2?\") are Decisions or notes. Keep them distinct so team members don't jump to conclusions. Not sure yet? Park it in \"Context & Potential Note\", then use \"Confirm → Observed Event\" once it is verified.",
 "guide.sec2Title":"2. Retroactive Attack Events","guide.sec2Body":"If log analysis reveals an attack started days ago, log it under Phase \"0. Occurrence / Latency\" so your timeline accurately reflects when the attacker first got in.",
-"guide.sec3Title":"3. Privacy First (Zero Leaks)","guide.sec3Body":"Everything stays inside your browser's memory. Nothing is stored or sent anywhere, so Save JSON before closing the tab; you will be warned if there are unsaved entries."
+"guide.sec3Title":"3. Privacy First (Zero Leaks)","guide.sec3Body":"Everything stays inside your browser's memory. Nothing is stored or sent anywhere, so Save JSON before closing the tab; you will be warned if there are unsaved entries.",
+"form.milestoneLabel":"4. Milestone (optional, used for durations)","form.milestoneNone":"— none —",
+"ms.occurred":"Occurred","ms.detected":"Detected","ms.declared":"Declared","ms.contained":"Contained","ms.eradicated":"Eradicated","ms.recovered":"Recovered","ms.closed":"Closed",
+"report.langLabel":"Report language","report.csvBtn":"📊 Download .csv",
+"r.defaultTitle":"Incident Response Report","r.generated":"Generated","r.commander":"Incident Commander","r.tz":"Timezone of recorded times","r.na":"N/A","r.none":"No records",
+"r.sec.ms":"Key Milestones & Durations","r.sec.timeline":"Chronological Timeline","r.sec.events":"Confirmed Observed Events & IoCs","r.sec.notes":"Context & Potential Notes (Unconfirmed)","r.sec.decisions":"Decisions & Investigation Attribution Log","r.sec.actions":"Response Actions & Outcomes","r.sec.comms":"Stakeholder Communications History",
+"r.th.time":"Time","r.th.timeEnd":"End time","r.th.timeText":"Time description","r.th.type":"Type","r.th.phase":"Phase","r.th.milestone":"Milestone","r.th.summary":"Summary","r.th.details":"Details","r.th.interval":"Interval","r.th.duration":"Duration","r.th.note":"Note",
+"r.est":"(estimated)","r.orderWarn":"check order",
+"r.durNote":"Durations are calculated from the entered timestamps and assume one common timezone. The earliest entry is used for each milestone; for completion milestones (Contained, Eradicated, Recovered, Closed) a time range counts at its end. Rows marked (estimated) involve a free-text time, so the timestamp is only approximate.",
+"r.footer":"Generated by Incident Chronology Studio (Client-Side Only)"
 },
 ja:{
 "header.privacy":"100% ローカル動作 / 外部通信なし","header.guideBtn":"💡 メモのコツ (Tips)",
@@ -271,7 +291,16 @@ ja:{
 "guide.title":"💡 ホワイトボード感覚で使える記録のコツ",
 "guide.sec1Title":"1. 事実と見立て（推測）を分ける","guide.sec1Body":"ログで確認できた事実（観測事象）と、分析中の見立て（意思決定）を区別して残すと、後からチーム内で混乱しません。確証のない情報は「補足・可能性メモ」に仮置きし、確定したら「確定 → 観測事象」で移しましょう。",
 "guide.sec2Title":"2. 発覚より前の出来事は「発生・潜伏」に","guide.sec2Body":"ログ調査で「実は数日前に侵入されていた」と判明した過去の痕跡は、フェーズ「0. 発生・潜伏」を選ぶと時間軸が綺麗に繋がります。",
-"guide.sec3Title":"3. 完全ローカルで安全","guide.sec3Body":"入力したデータはブラウザのメモリ内だけに存在し、どこにも保存・送信されません。タブを閉じる前にJSON保存してください（未保存のエントリーがある場合は警告します）。"
+"guide.sec3Title":"3. 完全ローカルで安全","guide.sec3Body":"入力したデータはブラウザのメモリ内だけに存在し、どこにも保存・送信されません。タブを閉じる前にJSON保存してください（未保存のエントリーがある場合は警告します）。",
+"form.milestoneLabel":"4. マイルストーン（任意・所要時間の算出に使用）","form.milestoneNone":"— なし —",
+"ms.occurred":"発生","ms.detected":"検知","ms.declared":"宣言","ms.contained":"封じ込め完了","ms.eradicated":"根絶完了","ms.recovered":"復旧完了","ms.closed":"クローズ",
+"report.langLabel":"レポート言語","report.csvBtn":"📊 .csv保存",
+"r.defaultTitle":"インシデント対応報告書","r.generated":"生成日時","r.commander":"インシデント対応責任者","r.tz":"記録時刻のタイムゾーン","r.na":"未設定","r.none":"記録なし",
+"r.sec.ms":"主要マイルストーンと所要時間","r.sec.timeline":"時系列タイムライン","r.sec.events":"確認済みの観測事象・IoC","r.sec.notes":"補足・可能性メモ（未確認）","r.sec.decisions":"意思決定・判断記録","r.sec.actions":"対応アクションと結果","r.sec.comms":"関係者への連絡履歴",
+"r.th.time":"日時","r.th.timeEnd":"終了日時","r.th.timeText":"時間の表記","r.th.type":"種別","r.th.phase":"フェーズ","r.th.milestone":"マイルストーン","r.th.summary":"概要","r.th.details":"詳細","r.th.interval":"区間","r.th.duration":"所要時間","r.th.note":"備考",
+"r.est":"（推定）","r.orderWarn":"順序要確認",
+"r.durNote":"所要時間は入力された日時から算出しており、すべて同一のタイムゾーンで記録されている前提です。各マイルストーンは最も早いエントリーを採用し、完了系（封じ込め・根絶・復旧・クローズ）で期間指定の場合は終了時刻を用います。（推定）は自由記述の時間を含むため、日時はおおよその値です。",
+"r.footer":"Incident Chronology Studio（クライアントサイドのみ）で生成"
 }};
 
 const $=id=>document.getElementById(id);
@@ -283,16 +312,21 @@ const CATKEY={OBSERVED_EVENT:'cat.observedEvent',DECISION:'cat.decision',ACTION:
 const CLS={OBSERVED_EVENT:'event',DECISION:'decision',ACTION:'action',COMMUNICATION:'comm',CONTEXT_NOTE:'note'};
 const PH=['p0','p1','p2','p3','p4','p5','p6'];
 const MODES=['exact','range','text'];
+const MS=['occurred','detected','declared','contained','eradicated','recovered','closed'];
+const DONE=['contained','eradicated','recovered','closed'];
+const PAIRS=[['occurred','detected'],['detected','declared'],['declared','contained'],['detected','contained'],['contained','eradicated'],['eradicated','recovered'],['recovered','closed'],['occurred','closed']];
 const TRE=/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
-let lang='en';
+let lang='en',rlang='en';
 const state={category:'OBSERVED_EVENT',sortAsc:true,filters:new Set(CATS),items:[],editId:null,dirty:false};
 const t=k=>i18n[lang][k]??i18n.en[k]??k;
-const en=k=>i18n.en[k]??k;
+const tr=k=>i18n[rlang][k]??i18n.en[k]??k;
 const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const uid=()=>(window.crypto&&crypto.randomUUID)?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2);
 const fd=s=>s?s.replace('T',' '):'-';
 const fmtT=i=>i.timeMode==='range'&&i.timeEnd?fd(i.time)+' → '+fd(i.timeEnd):(i.timeMode==='text'&&i.timeText?i.timeText:fd(i.time));
 const cmp=(a,b)=>(a.time||'').localeCompare(b.time||'');
+const mst=i=>DONE.includes(i.milestone)&&i.timeMode==='range'&&i.timeEnd?i.timeEnd:i.time;
+function tms(s){const m=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(s||'');return m?Date.UTC(+m[1],m[2]-1,+m[3],+m[4],+m[5]):NaN}
 let toastTimer;
 function toast(m){const e=$('toast');e.textContent=m;e.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>e.hidden=true,3000)}
 function tzDefault(){const o=-new Date().getTimezoneOffset(),a=Math.abs(o);return 'UTC'+(o<0?'-':'+')+String(Math.floor(a/60)).padStart(2,'0')+':'+String(a%60).padStart(2,'0')}
@@ -300,14 +334,16 @@ function nowLocal(){const n=new Date();n.setMinutes(n.getMinutes()-n.getTimezone
 
 /* ---------- i18n ---------- */
 function fillPhases(){const s=$('phase'),v=s.value||'p0';s.innerHTML=PH.map(k=>'<option value="'+k+'">'+esc(t('ph.'+k))+'</option>').join('');s.value=v}
+function fillMilestones(){const s=$('milestone'),v=s.value||'';s.innerHTML='<option value="">'+esc(t('form.milestoneNone'))+'</option>'+MS.map(k=>'<option value="'+k+'">'+esc(t('ms.'+k))+'</option>').join('');s.value=v}
 function setAddLabel(){$('addBtn').textContent=t(state.editId?'form.saveBtn':'form.addBtn')}
 function updateLang(l){
-  lang=l;document.documentElement.lang=l;document.title='Incident Chronology & Report Studio';
+  lang=l;rlang=l;$('reportLang').value=l;document.documentElement.lang=l;document.title='Incident Chronology Studio';
   document.querySelectorAll('[data-i18n]').forEach(e=>e.textContent=t(e.dataset.i18n));
   document.querySelectorAll('[data-i18n-ph]').forEach(e=>e.placeholder=t(e.dataset.i18nPh));
-  fillPhases();setAddLabel();render();
+  fillPhases();fillMilestones();setAddLabel();render();
 }
 $('langToggle').addEventListener('click',()=>updateLang(lang==='en'?'ja':'en'));
+$('reportLang').addEventListener('change',e=>{rlang=e.target.value==='ja'?'ja':'en';generateMarkdown()});
 
 /* ---------- form ---------- */
 function setCat(c){
@@ -321,13 +357,14 @@ $('timeMode').addEventListener('change',e=>setMode(e.target.value));
 $('nowBtn').addEventListener('click',()=>{$('eventTime').value=nowLocal()});
 function clearForm(){
   ['summary','timeEnd','timeText',...Object.values(IDF)].forEach(id=>$(id).value='');
+  $('milestone').value='';
   $('eventTime').value=nowLocal();
 }
 function endEdit(){state.editId=null;$('cancelEdit').hidden=true;setAddLabel()}
 function startEdit(id){
   const it=state.items.find(i=>i.id===id);if(!it)return;
   state.editId=id;setCat(it.category);setMode(it.timeMode);
-  $('eventTime').value=it.time;$('timeEnd').value=it.timeEnd;$('timeText').value=it.timeText;$('phase').value=it.phase;$('summary').value=it.summary;
+  $('eventTime').value=it.time;$('timeEnd').value=it.timeEnd;$('timeText').value=it.timeText;$('phase').value=it.phase;$('milestone').value=it.milestone||'';$('summary').value=it.summary;
   Object.keys(IDF).forEach(f=>$(IDF[f]).value=FIELDS[it.category].includes(f)?(it[f]||''):'');
   $('cancelEdit').hidden=false;setAddLabel();$('summary').focus();window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -337,7 +374,7 @@ function promote(id){
 }
 $('cancelEdit').addEventListener('click',()=>{endEdit();clearForm()});
 $('addBtn').addEventListener('click',()=>{
-  const it={category:state.category,timeMode:$('timeMode').value,time:$('eventTime').value,timeEnd:$('timeEnd').value,timeText:$('timeText').value.trim(),phase:$('phase').value,summary:$('summary').value.trim()};
+  const it={category:state.category,timeMode:$('timeMode').value,time:$('eventTime').value,timeEnd:$('timeEnd').value,timeText:$('timeText').value.trim(),phase:$('phase').value,milestone:$('milestone').value,summary:$('summary').value.trim()};
   if(!it.summary||!it.time){toast(t('msg.empty'));return}
   FIELDS[it.category].forEach(f=>it[f]=$(IDF[f]).value.trim());
   if(state.editId){const x=state.items.findIndex(i=>i.id===state.editId);if(x>=0)state.items[x]={...it,id:state.editId};endEdit()}
@@ -379,7 +416,8 @@ function render(){
   $('timelineList').innerHTML=!state.items.length?'<div class="empty"><p>'+esc(t('empty.text'))+'</p><button class="btn-secondary" data-act="sample">'+esc(t('timeline.sampleBtn'))+'</button></div>':L.map(i=>{
     const meta=FIELDS[i.category].filter(f=>i[f]).map(f=>'<div><strong>'+esc(t('c.'+f))+':</strong> '+esc(i[f])+'</div>').join('');
     const anchor=i.timeMode==='text'&&i.timeText?' <small>('+esc(fd(i.time))+')</small>':'';
-    return '<div class="card cat-'+i.category+'"><div class="ch"><div><span class="tag tag-'+CLS[i.category]+'">'+esc(t(CATKEY[i.category]))+'</span><span class="tag tag-phase">'+esc(t('ph.'+i.phase))+'</span></div>'
+    const ms=MS.includes(i.milestone)?'<span class="tag tag-ms">🚩 '+esc(t('ms.'+i.milestone))+'</span>':'';
+    return '<div class="card cat-'+i.category+'"><div class="ch"><div><span class="tag tag-'+CLS[i.category]+'">'+esc(t(CATKEY[i.category]))+'</span><span class="tag tag-phase">'+esc(t('ph.'+i.phase))+'</span>'+ms+'</div>'
       +'<div class="ct">⏱️ '+esc(fmtT(i))+anchor+'</div></div><div class="cb">'+esc(i.summary)+'</div>'
       +(meta?'<div class="cm">'+meta+'</div>':'')
       +'<div class="ca">'+(i.category==='CONTEXT_NOTE'?'<button class="btn-xs promote" data-act="promote" data-id="'+esc(i.id)+'">'+esc(t('btn.promote'))+'</button>':'')+'<button class="btn-xs" data-act="edit" data-id="'+esc(i.id)+'">'+esc(t('btn.edit'))+'</button><button class="btn-xs" data-act="del" data-id="'+esc(i.id)+'">'+esc(t('btn.delete'))+'</button></div></div>';
@@ -390,24 +428,59 @@ function render(){
 /* ---------- markdown ---------- */
 let lastMd='';
 const mc=s=>(s===undefined||s===null||s===''?'-':String(s)).replace(/\|/g,'\\|').replace(/\r?\n/g,'<br>');
-const tbl=(h,rows)=>rows.length?'| '+h.join(' | ')+' |\n|'+h.map(()=>' :--- |').join('')+'\n'+rows.map(r=>'| '+r.map(mc).join(' | ')+' |\n').join('')+'\n':'*No records*\n\n';
+const tbl=(h,rows)=>rows.length?'| '+h.join(' | ')+' |\n|'+h.map(()=>' :--- |').join('')+'\n'+rows.map(r=>'| '+r.map(mc).join(' | ')+' |\n').join('')+'\n':'*'+tr('r.none')+'*\n\n';
+function fmtDur(ms){
+  const m=Math.round(ms/60000),d=Math.floor(m/1440),h=Math.floor(m%1440/60),n=m%60,ja=rlang==='ja',p=[];
+  if(d)p.push(d+(ja?'日':'d'));if(h)p.push(h+(ja?'時間':'h'));if(n||!p.length)p.push(n+(ja?'分':'m'));
+  return p.join(ja?'':' ');
+}
+function msSection(L){
+  const got=MS.map(k=>{
+    const c=L.filter(i=>i.milestone===k&&TRE.test(mst(i))).sort((a,b)=>mst(a).localeCompare(mst(b)));
+    return c.length?{k,t:mst(c[0]),i:c[0],est:c[0].timeMode==='text'}:null;
+  }).filter(Boolean);
+  const by={};got.forEach(g=>by[g.k]=g);
+  let o=tbl([tr('r.th.milestone'),tr('r.th.time'),tr('r.th.summary')],got.map(g=>[tr('ms.'+g.k),fd(g.t)+(g.est?' '+tr('r.est'):''),g.i.summary]));
+  const rows=PAIRS.filter(p=>by[p[0]]&&by[p[1]]).map(p=>{
+    const a=by[p[0]],b=by[p[1]],d=tms(b.t)-tms(a.t),n=[];
+    if(d<0)n.push(tr('r.orderWarn'));if(a.est||b.est)n.push(tr('r.est'));
+    return [tr('ms.'+p[0])+' → '+tr('ms.'+p[1]),d<0?'-':fmtDur(d),n.join('; ')];
+  });
+  if(rows.length)o+=tbl([tr('r.th.interval'),tr('r.th.duration'),tr('r.th.note')],rows)+'*'+tr('r.durNote')+'*\n\n';
+  return o;
+}
 function generateMarkdown(){
-  const ti=$('incTitle').value.replace(/\s+/g,' ').trim()||'Incident Response Report';
-  const cmd=$('incCommander').value.replace(/\s+/g,' ').trim()||'N/A';
-  const tz=$('incTz').value.replace(/\s+/g,' ').trim()||'N/A';
+  const ti=$('incTitle').value.replace(/\s+/g,' ').trim()||tr('r.defaultTitle');
+  const cmd=$('incCommander').value.replace(/\s+/g,' ').trim()||tr('r.na');
+  const tz=$('incTz').value.replace(/\s+/g,' ').trim()||tr('r.na');
   const L=state.items.slice().sort(cmp);
-  const det=i=>FIELDS[i.category].filter(f=>i[f]).map(f=>en('c.'+f)+': '+i[f]).join('; ');
-  let md='# '+ti+'\n\n**Generated:** '+new Date().toISOString().slice(0,16).replace('T',' ')+' UTC\n**Incident Commander:** '+cmd+'\n**Timezone of recorded times:** '+tz+'\n\n---\n\n';
-  md+='## 1. Chronological Timeline\n\n'+tbl(['Time','Type','Phase','Summary','Details'],L.map(i=>[fmtT(i),en(CATKEY[i.category]),en('ph.'+i.phase),i.summary,det(i)]));
-  const sec=(n,title,cat)=>{
+  const det=i=>FIELDS[i.category].filter(f=>i[f]).map(f=>tr('c.'+f)+': '+i[f]).join('; ');
+  let md='# '+ti+'\n\n**'+tr('r.generated')+':** '+new Date().toISOString().slice(0,16).replace('T',' ')+' UTC\n**'+tr('r.commander')+':** '+cmd+'\n**'+tr('r.tz')+':** '+tz+'\n\n---\n\n';
+  md+='## 1. '+tr('r.sec.ms')+'\n\n'+msSection(L);
+  md+='## 2. '+tr('r.sec.timeline')+'\n\n'+tbl([tr('r.th.time'),tr('r.th.type'),tr('r.th.phase'),tr('r.th.milestone'),tr('r.th.summary'),tr('r.th.details')],L.map(i=>[fmtT(i),tr(CATKEY[i.category]),tr('ph.'+i.phase),MS.includes(i.milestone)?tr('ms.'+i.milestone):'',i.summary,det(i)]));
+  const sec=(n,key,cat)=>{
     const f=FIELDS[cat];
-    return '## '+n+'. '+title+'\n\n'+tbl(['Time','Phase','Summary',...f.map(x=>en('c.'+x))],L.filter(i=>i.category===cat).map(i=>[fmtT(i),en('ph.'+i.phase),i.summary,...f.map(x=>i[x])]));
+    return '## '+n+'. '+tr(key)+'\n\n'+tbl([tr('r.th.time'),tr('r.th.phase'),tr('r.th.summary'),...f.map(x=>tr('c.'+x))],L.filter(i=>i.category===cat).map(i=>[fmtT(i),tr('ph.'+i.phase),i.summary,...f.map(x=>i[x])]));
   };
-  md+=sec(2,'Confirmed Observed Events & IoCs','OBSERVED_EVENT')+sec(3,'Context & Potential Notes (Unconfirmed)','CONTEXT_NOTE')+sec(4,'Decisions & Investigation Attribution Log','DECISION')+sec(5,'Response Actions & Milestones','ACTION')+sec(6,'Stakeholder Communications History','COMMUNICATION');
-  md+='---\n*Generated by Incident Chronology Studio (Client-Side Only)*\n';
+  md+=sec(3,'r.sec.events','OBSERVED_EVENT')+sec(4,'r.sec.notes','CONTEXT_NOTE')+sec(5,'r.sec.decisions','DECISION')+sec(6,'r.sec.actions','ACTION')+sec(7,'r.sec.comms','COMMUNICATION');
+  md+='---\n*'+tr('r.footer')+'*\n';
   lastMd=md;$('markdownOutput').textContent=md;
 }
 ['incTitle','incCommander','incTz'].forEach(id=>$(id).addEventListener('input',()=>{state.dirty=true;generateMarkdown()}));
+
+/* ---------- CSV ---------- */
+const csvCell=v=>{
+  let s=String(v??'');
+  if(/^[=+\-@\t\r]/.test(s))s="'"+s; /* neutralise spreadsheet formulas */
+  return '"'+s.replace(/"/g,'""')+'"';
+};
+const fx=s=>s?s.replace('T',' '):'';
+function generateCsv(){
+  const keys=Object.keys(IDF);
+  const head=[tr('r.th.time'),tr('r.th.timeEnd'),tr('r.th.timeText'),tr('r.th.type'),tr('r.th.phase'),tr('r.th.milestone'),tr('r.th.summary'),...keys.map(f=>tr('c.'+f))];
+  const rows=state.items.slice().sort(cmp).map(i=>[fx(i.time),i.timeMode==='range'?fx(i.timeEnd):'',i.timeMode==='text'?i.timeText:'',tr(CATKEY[i.category]),tr('ph.'+i.phase),MS.includes(i.milestone)?tr('ms.'+i.milestone):'',i.summary,...keys.map(f=>FIELDS[i.category].includes(f)?(i[f]||''):'')]);
+  return '\uFEFF'+[head,...rows].map(r=>r.map(csvCell).join(',')).join('\r\n')+'\r\n';
+}
 
 function download(text,name,type){
   const u=URL.createObjectURL(new Blob([text],{type}));
@@ -416,6 +489,7 @@ function download(text,name,type){
 }
 const stamp=()=>new Date().toISOString().replace(/[:.]/g,'-');
 $('dlMdBtn').addEventListener('click',()=>download(lastMd,'incident-report-'+stamp()+'.md','text/markdown;charset=utf-8'));
+$('dlCsvBtn').addEventListener('click',()=>download(generateCsv(),'incident-chronology-'+stamp()+'.csv','text/csv;charset=utf-8'));
 $('copyMdBtn').addEventListener('click',()=>{
   const fb=()=>{
     try{const ta=document.createElement('textarea');ta.value=lastMd;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();const ok=document.execCommand('copy');ta.remove();toast(t(ok?'msg.copied':'msg.copyFail'))}
@@ -426,7 +500,7 @@ $('copyMdBtn').addEventListener('click',()=>{
 
 /* ---------- JSON export / import ---------- */
 $('exportJsonBtn').addEventListener('click',()=>{
-  const data={app:'incident-chronology-studio',schemaVersion:2,meta:{title:$('incTitle').value,commander:$('incCommander').value,tz:$('incTz').value},items:state.items};
+  const data={app:'incident-chronology-studio',schemaVersion:3,meta:{title:$('incTitle').value,commander:$('incCommander').value,tz:$('incTz').value},items:state.items};
   download(JSON.stringify(data,null,2),'incident-chronology-'+stamp()+'.json','application/json');
   state.dirty=false;
 });
@@ -436,7 +510,8 @@ function cleanItem(r){
   const tm=r.time??r.eventTime,ph=str(r.phase,1);
   const it={id:uid(),category:r.category,timeMode:MODES.includes(r.timeMode)?r.timeMode:'exact',
     time:TRE.test(tm)?tm:'',timeEnd:TRE.test(r.timeEnd)?r.timeEnd:'',timeText:str(r.timeText,200),
-    phase:PH.includes(r.phase)?r.phase:(PH.includes('p'+ph)?'p'+ph:'p0'),summary:str(r.summary)};
+    phase:PH.includes(r.phase)?r.phase:(PH.includes('p'+ph)?'p'+ph:'p0'),
+    milestone:MS.includes(r.milestone)?r.milestone:'',summary:str(r.summary)};
   FIELDS[r.category].forEach(f=>it[f]=str(r[f],1000));
   return it.summary?it:null;
 }
@@ -476,27 +551,30 @@ window.addEventListener('beforeunload',e=>{if(state.dirty&&state.items.length){e
 /* ---------- sample incidents (fictional) ---------- */
 const CM={E:'OBSERVED_EVENT',D:'DECISION',A:'ACTION',C:'COMMUNICATION',N:'CONTEXT_NOTE'};
 const S=(c,time,phase,summary,f1,f2,mode,x)=>{const category=CM[c],fl=FIELDS[category],o={category,time,phase,summary,timeMode:mode||'exact',timeEnd:mode==='range'?x:'',timeText:mode==='text'?x:''};o[fl[0]]=f1;if(fl[1])o[fl[1]]=f2;return o};
+const M=(m,o)=>{o.milestone=m;return o};
 const SAMPLES={
 en:{meta:{title:"SAMPLE-Malware-Infection-Handling",commander:"Alex Example",tz:"UTC+01:00"},items:[
-S('E','2026-11-03T22:40','p0',"Phishing email with a macro-enabled attachment reached a finance mailbox (identified retroactively).","Message-ID <a1b2c3@mail.example.test>",'',"text","Nov 3, late evening (est.)"),
+M('occurred',S('E','2026-11-03T22:40','p0',"Phishing email with a macro-enabled attachment reached a finance mailbox (identified retroactively).","Message-ID <a1b2c3@mail.example.test>",'',"text","Nov 3, late evening (est.)")),
 S('E','2026-11-04T08:15','p0',"Macro executed on FIN-PC-014; PowerShell started with an encoded command.","Sysmon EventID 1, parent=WINWORD.EXE"),
-S('E','2026-11-05T09:12','p1',"EDR alert: suspicious outbound beaconing from FIN-PC-014.","EDR alert #48213, dst 198.51.100.23:443 every ~60s"),
-S('D','2026-11-05T09:25','p2',"Treat as confirmed malware infection. Declare incident, severity High.","SOC Analyst A","Beaconing interval + IP listed in threat-intel feed"),
+M('detected',S('E','2026-11-05T09:12','p1',"EDR alert: suspicious outbound beaconing from FIN-PC-014.","EDR alert #48213, dst 198.51.100.23:443 every ~60s")),
+M('declared',S('D','2026-11-05T09:25','p2',"Treat as confirmed malware infection. Declare incident, severity High.","SOC Analyst A","Beaconing interval + IP listed in threat-intel feed")),
 S('C','2026-11-05T09:40','p6',"Incident declared; CISO and IT helpdesk notified.","CISO, IT Helpdesk","Phone + Slack #ir-war-room"),
 S('A','2026-11-05T09:55','p3',"Network-isolated FIN-PC-014 via EDR.","Responder B","Host isolated, user informed"),
 S('A','2026-11-05T10:30','p4',"Acquired memory image and triage disk collection.","Responder B","mem.raw, triage zip; hashes recorded","range","2026-11-05T11:30"),
 S('N','2026-11-05T10:50','p2',"Other Finance hosts may be beaconing too (unconfirmed).","Same phishing mail went to 6 Finance mailboxes","Search proxy logs for 198.51.100.23"),
 S('E','2026-11-05T11:10','p2',"Same beacon pattern found on FIN-PC-021 in proxy logs (lateral spread suspected).","Proxy log, 2 hits since 07:50"),
 S('D','2026-11-05T11:20','p2',"Expand scope to the Finance VLAN and hunt for IoCs on all hosts.","Incident Commander","Second host with identical C2 traffic"),
-S('A','2026-11-05T13:00','p5',"Reimaged both hosts; reset affected user passwords.","IT Operations","Rebuilt from golden image","range","2026-11-05T16:30"),
+M('contained',S('A','2026-11-05T11:40','p3',"Isolated FIN-PC-021 and blocked 198.51.100.23 at the proxy.","Responder B","Both hosts isolated; C2 destination blocked")),
+M('eradicated',S('A','2026-11-05T13:00','p5',"Reimaged both hosts; reset affected user passwords.","IT Operations","Rebuilt from golden image","range","2026-11-05T16:30")),
 S('C','2026-11-05T17:00','p6',"Status update: contained, no evidence of data exfiltration so far.","Executive team, Legal","Email (encrypted)"),
-S('D','2026-11-06T10:00','p5',"Close incident after 24h of clean monitoring; schedule lessons-learned meeting.","Incident Commander","No recurrence, scope fully remediated")]},
+M('recovered',S('E','2026-11-05T17:30','p5',"Both hosts back on the network; no further beaconing observed.","Proxy log + EDR, clean since 17:30")),
+M('closed',S('D','2026-11-06T10:00','p5',"Close incident after 24h of clean monitoring; schedule lessons-learned meeting.","Incident Commander","No recurrence, scope fully remediated"))]},
 ja:{meta:{title:"サンプル-ランサムウェア疑い対応",commander:"セキュリティ太郎",tz:"UTC+09:00"},items:[
-S('E','2026-11-06T03:10','p0',"VPN機器に海外IPから大量のログイン試行（後日ログ調査で判明）。","VPNログ 203.0.113.45 から失敗約1,200件",'',"text","11/6 未明（推定）"),
-S('E','2026-11-07T08:30','p1',"ファイルサーバの共有フォルダで拡張子が一括変更されているとの報告。","ヘルプデスク受付 #20261107-003"),
+M('occurred',S('E','2026-11-06T03:10','p0',"VPN機器に海外IPから大量のログイン試行（後日ログ調査で判明）。","VPNログ 203.0.113.45 から失敗約1,200件",'',"text","11/6 未明（推定）")),
+M('detected',S('E','2026-11-07T08:30','p1',"ファイルサーバの共有フォルダで拡張子が一括変更されているとの報告。","ヘルプデスク受付 #20261107-003")),
 S('N','2026-11-07T08:40','p2',"VPN経由の侵入が原因の可能性（未確認）。","同時期にVPNへの大量ログイン試行ログがある","VPN認証成功ログと侵入時刻を照合"),
-S('D','2026-11-07T08:50','p2',"ランサムウェア感染の疑いとして緊急対応を開始。","情シス課長","ランサムノート(README.txt)の存在を確認"),
-S('A','2026-11-07T09:05','p3',"ファイルサーバをネットワークから切断（電源は落とさない）。","インフラ担当","LAN切断、メモリ保全のため電源維持"),
+M('declared',S('D','2026-11-07T08:50','p2',"ランサムウェア感染の疑いとして緊急対応を開始。","情シス課長","ランサムノート(README.txt)の存在を確認")),
+M('contained',S('A','2026-11-07T09:05','p3',"ファイルサーバをネットワークから切断（電源は落とさない）。","インフラ担当","LAN切断、メモリ保全のため電源維持")),
 S('C','2026-11-07T09:30','p6',"経営陣・法務へ一報。個人情報流出の可能性を共有。","経営陣, 法務","電話・暗号化メール"),
 S('C','2026-11-07T13:00','p6',"外部の専門業者およびIPAへ相談。","フォレンジック業者, IPA","電話"),
 S('A','2026-11-07T14:00','p4',"サーバのディスクイメージとログを取得。","フォレンジック業者","イメージ取得、ハッシュ値記録済み","range","2026-11-07T17:30"),
