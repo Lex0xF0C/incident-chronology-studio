@@ -63,7 +63,7 @@ Do not add, remove or rename categories without a maintainer's decision. If a ca
 Phase IDs are `p0` to `p6` (Occurrence/Latency, Detection, Triage, Containment, Forensics, Eradication/Recovery, Communication). Store IDs, never display strings; labels come from the i18n dictionaries. Do not claim that the phase list formally implements NIST SP 800-61 Rev. 3, the ENISA guide or any other standard unless a real mapping has been added.
 
 ### 3.4 JSON schema and import validation
-Export format: `{ app, schemaVersion: 4, meta: { title, commander, tz }, template: { id, na }, items: [...] }`. Do not export UI state (the hint toggle and the pending form link are UI state).
+Export format: `{ app, schemaVersion: 5, meta: { title, commander, tz }, template: { id, na }, items: [...] }`. Do not export UI state (the hint toggle and the pending form link are UI state).
 
 Import must remain defensive:
 * Parse with `JSON.parse` only. Require `items` to be an array of at most 5000 entries.
@@ -71,7 +71,7 @@ Import must remain defensive:
 * Coerce every other value to a string and cap its length (summary 5000, category fields 1000, `timeText` 200, meta fields 200 or less).
 * Keep only known guide item IDs as keys of `template.na`, and cap each reason at 300 characters. Coerce `slot` to a string before checking it, and look keys up with `hasOwnProperty`, never with `in` or a bare property read.
 * Drop invalid entries and regenerate every `id`. Never trust imported IDs.
-* Keep accepting legacy files: schema version 3 (no `template` or `slot`), schema version 2 (also no `milestone`, which becomes empty) and schema version 1 (`eventTime`, English phase names).
+* Keep accepting legacy files: schema version 4 (no `reopened` milestone), schema version 3 (no `template` or `slot`), schema version 2 (also no `milestone`, which becomes empty) and schema version 1 (`eventTime`, English phase names).
 * On any failure, show an error and leave the current state untouched. Ask for confirmation before replacing existing entries.
 
 When the schema changes, raise `schemaVersion`, keep the older versions importable, and update this section and the README.
@@ -79,10 +79,12 @@ When the schema changes, raise `schemaVersion`, keep the older versions importab
 ### 3.5 Milestones
 A milestone is an optional tag (`milestone`) on any entry. It does not replace the category or the phase.
 
-* Keys, in lifecycle order (`MS`): `occurred`, `detected`, `declared`, `contained`, `eradicated`, `recovered`, `closed`. An empty string means no milestone.
+**Milestones record when something happened; they are not mandatory stages.** Incident response runs in parallel, loops back, is repeated and gets reopened (800-61r3 and the ENISA guide both describe this). Never block, reorder or warn about entries because of the order of their milestones, and do not present the milestone list as a required path.
+
+* Keys, in a reference order (`MS`): `occurred`, `detected`, `declared`, `contained`, `eradicated`, `recovered`, `closed`, `reopened`. An empty string means no milestone. `reopened` means a closed incident was reopened, or a stage believed finished was not.
 * Completion milestones (`DONE`): `contained`, `eradicated`, `recovered`, `closed`. For these, an entry in `range` mode counts at its `timeEnd`; every other milestone uses `time`.
-* If several entries carry the same milestone, the earliest one is used.
-* The report shows the milestones and the intervals listed in `PAIRS`, and only where both ends exist. A negative interval is shown as "check order", never as a negative number. An interval that involves a `text`-mode entry is marked "(estimated)".
+* A milestone may have several entries. `msGot` returns, for each milestone, the first entry, the last entry and the count (by `mst`, which applies the range rule above). The report shows first, last and count.
+* The report shows the milestones and the intervals listed in `PAIRS`, and only where both ends exist. Each interval runs from the first record of the starting milestone to the first record of the ending milestone, plus a second figure to the last record when the ending milestone has several entries. An interval that overlaps or is negative is shown as a number with a neutral note ("overlaps or runs in parallel"); never hide it, never call it an error. An interval that involves a `text`-mode entry is marked "(estimated)".
 * Labels come from the `ms.*` keys of both dictionaries. Do not store display strings.
 * If you add, remove or rename a milestone, update `MS`, `DONE` and `PAIRS` as needed, the milestone select, both i18n dictionaries (`ms.*`), the card tag, `cleanItem`, the Markdown report, the CSV export, the samples, `README.md` and this file.
 * Durations are a reporting aid. Do not present them as a performance score or a target.
@@ -100,7 +102,9 @@ Guide templates help beginners see what is left to record. They are prompts, not
 * **Status is derived, not stored.** Recorded if an entry that is not a `CONTEXT_NOTE` carries the item's `slot`; Unknown if only a `CONTEXT_NOTE` does; Not applicable if the user marked it (`state.slotNa`, with an optional reason); otherwise To do. Deleting an entry must never leave a stale status.
 * **Linking.** An entry links to at most one item through `slot`. Record and Unknown only prefill the form, and nothing changes until the user saves. Promoting a note keeps its `slot`.
 * **CSF labels are references only.** Take them from the outcomes used in NIST SP 800-61r3. Do not describe the templates as implementing or complying with CSF 2.0, SP 800-61r3 or the ENISA guide.
-* **Changing items or templates.** Update `TI`, `CORE` and `EXTRA`, `TPLT` in both languages, the `tpl.*` template-name keys, the samples if relevant, `README.md` and this file.
+* **Derived views.** The milestone record bar and "Next up" are computed from the timeline on every render. Store nothing for them. "Next up" is the first three `todo` items in template order. Nothing is held back by milestones or stage. The user can set an item aside with Later, which lives in `state.later` (in-memory UI state, not exported, cleared when the template changes, a sample or file is loaded, or everything is cleared). The bar marks ✔ for a milestone with entries (first and last time, count), ○ for none, and ↩ on Closed when a `reopened` entry is later than the latest `closed` one; `reopened` is shown only when it has entries or Closed does. Do not add "next step" arrows or order warnings. Clicking a step only prefills the form; it must not save anything.
+* **CSF descriptions.** `CSFD` holds a short paraphrased description for every CSF ID used in `TI`, in both languages. A new ID needs both.
+* **Changing items or templates.** Update `TI`, `CORE` and `EXTRA`, `TPLT` and `CSFD` in both languages, the `tpl.*` template-name keys, the samples if relevant, `README.md` and this file.
 
 ## 4. Internationalisation
 
@@ -109,7 +113,7 @@ Guide templates help beginners see what is left to record. They are prompts, not
 * Any new key must exist in **both** `i18n.en` and `i18n.ja`. The fallback chain is a safety net, not a licence to skip translation.
 * The UI language (`lang`, read with `t()`) and the report language (`rlang`, read with `tr()`) are separate. The report language follows the UI language when the UI language changes, and can then be set independently with the report language selector.
 * The Markdown report and the CSV use `tr()` only, so a report is written in one language and never mixes two. Report strings live in the `r.*` keys, plus the shared `ms.*`, `c.*`, `ph.*` and category keys. User-entered content is never translated.
-* Guide template text (a question and a hint for every item) lives in the `TPLT` dictionary and needs an `en` and a `ja` entry for every item. Template names, column names and status labels are `tpl.*` keys.
+* Guide template text (a question and a hint for every item) lives in the `TPLT` dictionary and needs an `en` and a `ja` entry for every item; the CSF descriptions live in `CSFD` with the same rule. Template names, column names and status labels are `tpl.*` keys.
 * Sample incidents exist per language and are loaded according to the current UI language.
 
 ## 5. UI and accessibility
@@ -138,11 +142,12 @@ Then check by hand (or with a throw-away browser script that you do not commit):
 - [ ] Promote a note to an Observed Event: cancel keeps the note; save converts it, keeping the timestamp (and the milestone, if any).
 - [ ] Save JSON → reload → Load JSON restores entries, milestones and meta. Schema version 1 and 2 files still load.
 - [ ] Malformed JSON, a wrong schema and a hostile file (script tags, `onerror`, odd IDs, phases and milestones) are rejected or neutralised, and the existing state is untouched.
-- [ ] Milestones: tag entries and check the card tags and the Key Milestones & Durations section. The earliest entry wins, a range counts at its end for completion milestones, a `text`-mode time is marked as estimated, an out-of-order pair shows "check order", and a report with no milestones still renders.
+- [ ] Milestones: tag entries and check the card tags and the Key Milestones & Durations section. A milestone with several entries shows first, last and count; durations run from the first record and show a second figure to the last record; a range counts at its end for completion milestones; a `text`-mode time is marked as estimated; an overlapping or negative interval is shown as a number with the neutral note; and a report with no milestones still renders.
 - [ ] Markdown report: all sections present, `|` and line breaks escaped, tables well-formed, unconfirmed notes in their own section.
 - [ ] Report language: English and Japanese reports are each fully in one language, including headers, milestone names, notes and footer. Changing the UI language moves the report language with it, and the selector can then override it.
 - [ ] CSV: opens in a spreadsheet with Japanese text intact, one row per entry, and a summary that starts with `=` is not run as a formula.
 - [ ] Guide: all four templates render in both languages. Record prefills category, phase and milestone and links the entry on save; Unknown creates a note; N/A keeps its reason; deleting a linked entry reopens the item; statuses and progress survive Save JSON → Load JSON; the report's Open Items section lists unrecorded items and is absent when no template is selected; a hostile `slot` or `template` value in a JSON file is neutralised.
+- [ ] Milestone record bar and Next up: the bar shows ✔ and ○ (with ranges and counts for repeated milestones, and a `text`-mode time shown with `~`), shows ↩ on Closed after a later Reopened entry, and shows no order warning; clicking a step opens the form without saving; Next up shows three unstarted items in template order with nothing held back, Later skips an item and Restore skipped brings it back, and the empty message appears when nothing is left; every CSF label has a description in both languages.
 - [ ] Both languages render fully (UI, cards, phase names, milestone names, samples, empty state, confirmations).
 - [ ] No new i18n keys are missing from either dictionary.
 
